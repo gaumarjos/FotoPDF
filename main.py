@@ -1,4 +1,5 @@
 # Stefano Salati 2021-03-16
+# Untested, have fun!
 
 from os import listdir
 from os.path import isfile, join
