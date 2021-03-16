@@ -20,21 +20,18 @@ def natural_keys(text):
 def main(argv):
 
     # Valori default
-    input_folder = "/Volumes/stemobile4/foto_in_lavorazione/2020/Sikh/Selezioni/Ampia A/"
-    output_filename = "/Volumes/stemobile4/foto_in_lavorazione/2020/Sikh/Selezioni/Ampia A/Ampia A"
+    input_folder = "."
+    output_filename = "presentation"
 
     # Interpretazione linea di comando
     try:
-        opts, args = getopt.getopt(argv, "hi:o",
+        opts, args = getopt.getopt(argv, "i:o:",
                                    ["input_folder=", "output_filename="])
     except getopt.GetoptError:
-        print("Messaggio errore")
+        print("Dai su...")
         sys.exit(2)
     for opt, arg in opts:
-        if opt == '-h':
-            print("Messaggio help")
-            sys.exit()
-        elif opt in ("-i", "--input_folder"):
+        if opt in ("-i", "--input_folder"):
             input_folder = arg
         elif opt in ("-o", "--output_filename"):
             output_filename = arg
