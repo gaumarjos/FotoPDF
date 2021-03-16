@@ -1,0 +1,105 @@
+{
+  "document": {
+    "title": "Turbanti Emiliani",
+    "author": "Stefano Salati",
+    "height": 210,
+    "width": 297
+  },
+
+  "font": {
+    "family": "Helvetica",
+    "usemyfont": 0,
+    "myfont": "miofont.ttf"
+  },
+
+  "cover": {
+    "show": 1,
+    "title": {
+      "string": "Turbanti Emiliani",
+      "size": 48,
+      "from_top": 4.0
+    },
+    "author": {
+      "size": 30,
+      "from_top": 5.5
+    }
+  },
+
+  "description": {
+    "show": 1,
+    "string": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam hendrerit nisi sed sollicitudin pellentesque. Nunc posuere purus rhoncus pulvinar aliquam. Ut aliquet tristique nisl vitae volutpat. Nulla aliquet porttitor venenatis. Donec a dui et dui fringilla consectetur id nec massa. Aliquam erat volutpat. Sed ut dui ut lacus dictum fermentum vel tincidunt neque. Sed sed lacinia lectus. Duis sit amet sodales felis. Duis nunc eros, mattis at dui ac, convallis semper risus. In adipiscing ultrices tellus, in suscipit massa vehicula eu.",
+    "size": 12,
+    "from_side": 24,
+    "from_top": 2.0,
+    "interline": 6
+  },
+
+  "contactsheet": {
+    "black_background": 0,
+    "rows": 4,
+    "columns": 6,
+    "horizontal_margin": 5,
+    "vertical_margin": 5,
+    "lateral_margin": 10
+  },
+
+  "final": {
+    "show": 1,
+    "author": {
+      "show": 1,
+      "size": 40,
+      "from_top": 4.0
+    },
+    "website": {
+      "show": 1,
+      "string": "www.stefanosalati.com",
+      "size": 20,
+      "from_top": 5.0
+    },
+    "email": {
+      "show": 1,
+      "string": "ste.salati@protonmail.com",
+      "size": 20,
+      "from_top": 5.5
+    },
+    "phone": {
+      "show": 1,
+      "string": "3481011471",
+      "size": 20,
+      "from_top": 6.0
+    },
+    "disclaimer": {
+      "show": 1,
+      "string": "Masterclass di Reportage con FotoImage di Fulvio Bugani",
+      "size": 20,
+      "from_top": 9.0
+    }
+  },
+
+  "photos": [
+    {"id": "1", "caption": "Didascalia 1 blablabla"},
+    {"id": "2", "caption": "Didascalia 2 blablabla"},
+    {"id": "3", "caption": "Didascalia 3 blablabla"},
+    {"id": "4", "caption": "Didascalia 4 blablabla"},
+    {"id": "1", "caption": "Didascalia 5 blablabla"},
+    {"id": "2", "caption": "Didascalia 6 blablabla"},
+    {"id": "3", "caption": "Didascalia 7 blablabla"},
+    {"id": "4", "caption": "Didascalia 8 blablabla"},
+    {"id": "1", "caption": "Didascalia 9 blablabla"},
+    {"id": "2", "caption": "Didascalia 10 blablabla"},
+    {"id": "3", "caption": "Didascalia 11 blablabla"},
+    {"id": "4", "caption": "Didascalia 12 blablabla"},
+    {"id": "1", "caption": "Didascalia 13 blablabla"},
+    {"id": "2", "caption": "Didascalia 14 blablabla"},
+    {"id": "3", "caption": "Didascalia 15 blablabla"},
+    {"id": "4", "caption": "Didascalia 16 blablabla"},
+    {"id": "1", "caption": "Didascalia 17 blablabla"},
+    {"id": "2", "caption": "Didascalia 18 blablabla"},
+    {"id": "3", "caption": "Didascalia 19 blablabla"},
+    {"id": "4", "caption": "Didascalia 20 blablabla"},
+    {"id": "1", "caption": "Didascalia 21 blablabla"},
+    {"id": "2", "caption": "Didascalia 22 blablabla"},
+    {"id": "3", "caption": "Didascalia 23 blablabla"},
+    {"id": "4", "caption": "Didascalia 24 blablabla"}
+ ]
+}
