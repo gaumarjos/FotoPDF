@@ -5,13 +5,11 @@
     "height": 210,
     "width": 297
   },
-
   "font": {
     "family": "Helvetica",
-    "usemyfont": 0,
+    "usemyfont": 1,
     "myfont": "miofont.ttf"
   },
-
   "cover": {
     "show": 1,
     "title": {
@@ -24,16 +22,14 @@
       "from_top": 5.5
     }
   },
-
   "description": {
     "show": 1,
-    "string": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam hendrerit nisi sed sollicitudin pellentesque. Nunc posuere purus rhoncus pulvinar aliquam. Ut aliquet tristique nisl vitae volutpat. Nulla aliquet porttitor venenatis. Donec a dui et dui fringilla consectetur id nec massa. Aliquam erat volutpat. Sed ut dui ut lacus dictum fermentum vel tincidunt neque. Sed sed lacinia lectus. Duis sit amet sodales felis. Duis nunc eros, mattis at dui ac, convallis semper risus. In adipiscing ultrices tellus, in suscipit massa vehicula eu.",
+    "string": "In Emilia esiste dagli anni '90 una comunità indiana di religione sikh molto numerosa, perfettamente integrata e attiva in tutti i settori. Molti membri di questa comunità lavorano nelle centinaia di aziende agricole che punteggiano la regione, occupandosi sia della cura delle vacche della produzione di Parmigiano Reggiano. Si può affermare che senza il loro supporto questo settore economico e il giro d'affari alla produzione di 1,4 mld che ruota intorno al prodotto DOP non sarebbe possibile.\nIn alcune aziende lavorano quasi esclusivamente sikh svolgendo tutte le mansioni: dal bergamino al casaro responsabile per l'intera produzione.\nQualsiasi sia la mansione, il lavoro nelle stalle e nei caseifici è molto duro. Non solo per la fatica fisica ma soprattutto da quello della continua e ininterrotta necessità di esserci. Non esiste un fine settimana e una giornata tipo può iniziare dalle 3 alle 5 del mattino e continuare fino a fine mattinata per poi ricominciare a metà pomeriggio fino alle 20. Alcuni lavori possono facilmente diventare una “prigione dolce” dove la vita è tutto sommato buona ma da cui non ci si può allontanare.\nIl lavoro descrive il lavoro in un caseificio e due stalle, mandati avanti col significativo contributo dei membri di questa comunità. Lavoro e scorci di vita privata di Parmjit Saini, trasferitosi dall'India nel 2000 che lavora con le vacche rosse reggiane (una razza che produce meno latte ma molto pregiato) a Roncadella (RE), . Taljit Singh, che ha iniziato a 26 anni come aiutante e ora, dopo 20, è il casaro a Gattatico (RE) aiutato da Mandip e infine Satnam e Pal, bergamini nella stessa azienda.\nCon i colori ho voluto rappresentare le sensazioni che ho provato ad essere lì: tranquillità a casa e movimento al lavoro, freddo fuori e umidità appiccisosa nelle fosse di mungitura e davanti alle caldaie e, più evidenti, le forti luci artificiali che contrastano col buio fuori.",
     "size": 12,
     "from_side": 24,
     "from_top": 2.0,
     "interline": 6
   },
-
   "contactsheet": {
     "black_background": 0,
     "rows": 4,
@@ -42,7 +38,6 @@
     "vertical_margin": 5,
     "lateral_margin": 10
   },
-
   "final": {
     "show": 1,
     "author": {
@@ -75,31 +70,107 @@
       "from_top": 9.0
     }
   },
-
-  "photos": [
-    {"id": "1", "caption": "Didascalia 1 blablabla"},
-    {"id": "2", "caption": "Didascalia 2 blablabla"},
-    {"id": "3", "caption": "Didascalia 3 blablabla"},
-    {"id": "4", "caption": "Didascalia 4 blablabla"},
-    {"id": "1", "caption": "Didascalia 5 blablabla"},
-    {"id": "2", "caption": "Didascalia 6 blablabla"},
-    {"id": "3", "caption": "Didascalia 7 blablabla"},
-    {"id": "4", "caption": "Didascalia 8 blablabla"},
-    {"id": "1", "caption": "Didascalia 9 blablabla"},
-    {"id": "2", "caption": "Didascalia 10 blablabla"},
-    {"id": "3", "caption": "Didascalia 11 blablabla"},
-    {"id": "4", "caption": "Didascalia 12 blablabla"},
-    {"id": "1", "caption": "Didascalia 13 blablabla"},
-    {"id": "2", "caption": "Didascalia 14 blablabla"},
-    {"id": "3", "caption": "Didascalia 15 blablabla"},
-    {"id": "4", "caption": "Didascalia 16 blablabla"},
-    {"id": "1", "caption": "Didascalia 17 blablabla"},
-    {"id": "2", "caption": "Didascalia 18 blablabla"},
-    {"id": "3", "caption": "Didascalia 19 blablabla"},
-    {"id": "4", "caption": "Didascalia 20 blablabla"},
-    {"id": "1", "caption": "Didascalia 21 blablabla"},
-    {"id": "2", "caption": "Didascalia 22 blablabla"},
-    {"id": "3", "caption": "Didascalia 23 blablabla"},
-    {"id": "4", "caption": "Didascalia 24 blablabla"}
- ]
+  "photos": {
+    "size": 12,
+    "from_side": 12,
+    "interline": 6,
+    "captions": [
+      {
+        "id": 1,
+        "caption": "Dopo il lavoro, la cura della barba e dei capelli è fondamentale. Kesh, capelli lunghi e non tagliati, sono considerati nel sikhismo un elemento indispensabile e segno di devozione spirituale. Roncadella (RE), marzo 2021."
+      },
+      {
+        "id": 2,
+        "caption": "Didascalia 2 blablabla"
+      },
+      {
+        "id": 3,
+        "caption": "Didascalia 3 blablabla"
+      },
+      {
+        "id": 4,
+        "caption": "Didascalia 4 blablabla"
+      },
+      {
+        "id": 5,
+        "caption": "Didascalia 5 blablabla"
+      },
+      {
+        "id": 6,
+        "caption": "Didascalia 6 blablabla"
+      },
+      {
+        "id": 7,
+        "caption": "Didascalia 7 blablabla"
+      },
+      {
+        "id": 8,
+        "caption": "Didascalia 8 blablabla"
+      },
+      {
+        "id": 9,
+        "caption": "Didascalia 9 blablabla"
+      },
+      {
+        "id": 10,
+        "caption": "Didascalia 10 blablabla"
+      },
+      {
+        "id": 11,
+        "caption": "Didascalia 11 blablabla"
+      },
+      {
+        "id": 12,
+        "caption": "Didascalia 12 blablabla"
+      },
+      {
+        "id": 13,
+        "caption": "Didascalia 13 blablabla"
+      },
+      {
+        "id": 14,
+        "caption": "Didascalia 14 blablabla"
+      },
+      {
+        "id": 15,
+        "caption": "Didascalia 15 blablabla"
+      },
+      {
+        "id": 16,
+        "caption": "Didascalia 16 blablabla"
+      },
+      {
+        "id": 17,
+        "caption": "Didascalia 17 blablabla"
+      },
+      {
+        "id": 18,
+        "caption": "Didascalia 18 blablabla"
+      },
+      {
+        "id": 19,
+        "caption": "Didascalia 19 blablabla"
+      },
+      {
+        "id": 20,
+        "caption": "Didascalia 20 blablabla"
+      },
+      {
+        "id": 21,
+        "caption": "Didascalia 21 blablabla"
+      },
+      {
+        "id": 22,
+        "caption": "Didascalia 22 blablabla"
+      },
+      {
+        "id": 23,
+        "caption": "Didascalia 23 blablabla"
+      },
+      {
+        "id": 24,
+        "caption": "Didascalia 24 blablabla"
+      }
+    ]
+  }
 }

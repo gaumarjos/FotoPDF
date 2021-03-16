@@ -88,14 +88,15 @@ def main(argv):
         pdf.multi_cell(w=W-int(obj['description']['from_side'])*2, h=int(obj['description']['interline']), txt=obj['description']['string'], border=0, align="L", fill=False)
 
     # Aggiungi immagini
-    pdf.set_font_size(12)
+    pdf.set_font_size(int(obj['photos']['size']))
     for i, image in enumerate(images):
         pdf.add_page()
         pdf.image(join(input_folder, image), x=12, y=10, w=W-24, h=0)
-        pdf.set_y(H - 19)
-        # Write caption
-        caption = str(obj['photos'][i]['caption'])
-        pdf.cell(0, 12, caption, 0, 1, align="C", fill=False)
+        pdf.set_y(H - 16)
+        pdf.set_x(int(obj['photos']['from_side']))
+        pdf.multi_cell(w=W - int(obj['photos']['from_side']) * 2, h=int(obj['photos']['interline']),
+                       txt=str(obj['photos']['captions'][i]['caption']), border=0, align="L", fill=False)
+
         # Write number of photo in sequence
         #pdf.cell(0, 12, str(i + 1), 0, 1, align="C", fill=False)
 
