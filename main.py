@@ -82,7 +82,7 @@ def main(argv):
             pdf.set_fill_color(255, 255, 255)
 
         if obj["cover"]["useimage"] >= 0:
-            pdf.image(join(input_folder, images[obj["cover"]["useimage"]]), x=-10, y=0, w=0, h=H, type="JPEG")
+            pdf.image(join(input_folder, images[obj["cover"]["useimage"]-1]), x=-10, y=0, w=0, h=H, type="JPEG")
 
         pdf.set_y(int(obj['cover']['title']['from_top']))
         pdf.set_font_size(int(obj['cover']['title']['size']))
