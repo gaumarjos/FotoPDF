@@ -2,7 +2,7 @@
 # Untested, have fun!
 
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, join, getsize
 from fpdf import FPDF
 import re
 import getopt
@@ -162,7 +162,9 @@ def main(argv):
             pdf.cell(0, 0, obj['final']['disclaimer']['string'], 0, 1, align="C", fill=False)
 
     # Salva
-    pdf.output(join(input_folder, output_filename + ".pdf"), "F")
+    output_filename = join(input_folder, output_filename + ".pdf")
+    pdf.output(output_filename, "F")
+    print("{:s} created ({:.1f}MB)!".format(output_filename, getsize(output_filename)/1000000.))
 
 
 if __name__ == "__main__":
