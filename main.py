@@ -1,4 +1,4 @@
-# Stefano Salati 2021-03-16
+# Stefano Salati 2021-03-17
 # Untested, have fun!
 
 from os import listdir
@@ -21,7 +21,7 @@ def main(argv):
 
     # Valori default
     input_folder = "."
-    output_filename = "presentation"
+    output_filename = "slides"
 
     # Interpretazione linea di comando
     try:
@@ -44,9 +44,13 @@ def main(argv):
     # Dimensioni foglio A4 in mm
     H = obj["document"]["height"]
     W = obj["document"]["width"]
+    H_px = H * 0.0393701 * 72
+    W_px = W * 0.0393701 * 72
+    print("File format: {}x{}mm, corresponding to {}x{}px in 72dpi.".format(H, W, H_px, W_px))
 
     # Creazione file e impostazioni generali
     pdf = FPDF(orientation='L', unit='mm', format='A4')
+    #pdf = FPDF(orientation='L', unit='pt', format=(750, 1000))
     pdf.set_compression(False)
     pdf.set_margins(0, 0, 0)
     pdf.set_auto_page_break(False)
@@ -71,18 +75,18 @@ def main(argv):
     # Copertina
     if bool(obj['cover']['show']):
         pdf.add_page()
-        pdf.set_y(H * float(obj['cover']['title']['from_top']) / 10.)
+        pdf.set_y(int(obj['cover']['title']['from_top']))
         pdf.set_font_size(int(obj['cover']['title']['size']))
         pdf.cell(0, 0, obj['cover']['title']['string'], 0, 1, align="C", fill=False)
 
-        pdf.set_y(H * float(obj['cover']['author']['from_top']) / 10.)
+        pdf.set_y(int(obj['cover']['author']['from_top']))
         pdf.set_font_size(int(obj['cover']['author']['size']))
         pdf.cell(0, 0, obj["document"]["author"], 0, 1, align="C", fill=False)
 
     # Pagina testo
     if bool(obj['description']['show']):
         pdf.add_page()
-        pdf.set_y(H * float(obj['description']['from_top']) / 10.)
+        pdf.set_y(int(obj['description']['from_top']))
         pdf.set_x(int(obj['description']['from_side']))
         pdf.set_font_size(int(obj['description']['size']))
         pdf.multi_cell(w=W-int(obj['description']['from_side'])*2, h=int(obj['description']['interline']), txt=obj['description']['string'], border=0, align="L", fill=False)
@@ -91,12 +95,11 @@ def main(argv):
     pdf.set_font_size(int(obj['photos']['size']))
     for i, image in enumerate(images):
         pdf.add_page()
-        pdf.image(join(input_folder, image), x=12, y=10, w=W-24, h=0)
+        pdf.image(join(input_folder, image), x=12, y=10, w=W-24, h=0, type="JPEG")
         pdf.set_y(H - 16)
         pdf.set_x(int(obj['photos']['from_side']))
         pdf.multi_cell(w=W - int(obj['photos']['from_side']) * 2, h=int(obj['photos']['interline']),
                        txt=str(obj['photos']['captions'][i]['caption']), border=0, align="L", fill=False)
-
         # Write number of photo in sequence
         #pdf.cell(0, 12, str(i + 1), 0, 1, align="C", fill=False)
 
@@ -134,27 +137,27 @@ def main(argv):
         pdf.add_page()
 
         if bool(obj['final']['author']['show']):
-            pdf.set_y(H * float(obj['final']['author']['from_top']) / 10.)
+            pdf.set_y(int(obj['final']['author']['from_top']))
             pdf.set_font_size(int(obj['final']['author']['size']))
             pdf.cell(0, 0, obj["document"]["author"], 0, 1, align="C", fill=False)
 
         if bool(obj['final']['website']['show']):
-            pdf.set_y(H * float(obj['final']['website']['from_top']) / 10.)
+            pdf.set_y(int(obj['final']['website']['from_top']))
             pdf.set_font_size(int(obj['final']['website']['size']))
             pdf.cell(0, 0, obj['final']['website']['string'], 0, 1, align="C", fill=False)
 
         if bool(obj['final']['email']['show']):
-            pdf.set_y(H * float(obj['final']['email']['from_top']) / 10.)
+            pdf.set_y(int(obj['final']['email']['from_top']))
             pdf.set_font_size(int(obj['final']['email']['size']))
             pdf.cell(0, 0, obj['final']['email']['string'], 0, 1, align="C", fill=False)
 
         if bool(obj['final']['phone']['show']):
-            pdf.set_y(H * float(obj['final']['phone']['from_top']) / 10.)
+            pdf.set_y(int(obj['final']['phone']['from_top']))
             pdf.set_font_size(int(obj['final']['phone']['size']))
             pdf.cell(0, 0, obj['final']['phone']['string'], 0, 1, align="C", fill=False)
 
         if bool(obj['final']['disclaimer']['show']):
-            pdf.set_y(H * float(obj['final']['disclaimer']['from_top']) / 10.)
+            pdf.set_y(int(obj['final']['disclaimer']['from_top']))
             pdf.set_font_size(int(obj['final']['disclaimer']['size']))
             pdf.cell(0, 0, obj['final']['disclaimer']['string'], 0, 1, align="C", fill=False)
 
