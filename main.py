@@ -75,13 +75,28 @@ def main(argv):
     # Copertina
     if bool(obj['cover']['show']):
         pdf.add_page()
+
+        if bool(obj['cover']['black_background']):
+            pdf.set_fill_color(0, 0, 0)
+            pdf.cell(0, H, "", 0, 1, align="C", fill=True)
+            pdf.set_fill_color(255, 255, 255)
+
+        if obj["cover"]["useimage"] >= 0:
+            pdf.image(join(input_folder, images[obj["cover"]["useimage"]]), x=-10, y=0, w=0, h=H, type="JPEG")
+
         pdf.set_y(int(obj['cover']['title']['from_top']))
         pdf.set_font_size(int(obj['cover']['title']['size']))
+        if not obj["cover"]["title"]["black_text"]:
+            pdf.set_text_color(255, 255, 255)
         pdf.cell(0, 0, obj['cover']['title']['string'], 0, 1, align="C", fill=False)
+        pdf.set_text_color(0, 0, 0)
 
         pdf.set_y(int(obj['cover']['author']['from_top']))
         pdf.set_font_size(int(obj['cover']['author']['size']))
+        if not obj["cover"]["author"]["black_text"]:
+            pdf.set_text_color(255, 255, 255)
         pdf.cell(0, 0, obj["document"]["author"], 0, 1, align="C", fill=False)
+        pdf.set_text_color(0, 0, 0)
 
     # Pagina testo
     if bool(obj['description']['show']):
@@ -112,9 +127,7 @@ def main(argv):
     m_lat = obj["contactsheet"]["lateral_margin"]
     if bool(obj['contactsheet']['black_background']):
         pdf.set_fill_color(0, 0, 0)
-    else:
-        pdf.set_fill_color(255, 255, 255)
-    pdf.cell(0, H, "", 0, 1, align="C", fill=True)
+        pdf.cell(0, H, "", 0, 1, align="C", fill=True)
 
     # Parto dalle colonne e vedo se l'altezza sta nei margini
     w = (W - 2 * m_lat - (C - 1) * m_oriz) / C

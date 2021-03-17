@@ -12,14 +12,20 @@
   },
   "cover": {
     "show": 1,
+    "useimage": 6,
+    "black_background": 1,
     "title": {
       "string": "Turbanti Emiliani",
       "size": 48,
-      "from_top": 94
+      "from_top": 30,
+      "_from_top": 94,
+      "black_text": 0
     },
     "author": {
       "size": 30,
-      "from_top": 118
+      "from_top": 200,
+      "_from_top": 118,
+      "black_text": 0
     }
   },
   "description": {
