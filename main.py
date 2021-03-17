@@ -46,7 +46,7 @@ def main(argv):
     W = obj["document"]["width"]
     H_px = H * 0.0393701 * 72
     W_px = W * 0.0393701 * 72
-    print("File format: {}x{}mm, corresponding to {}x{}px in 72dpi.".format(H, W, H_px, W_px))
+    print("File format: {:.1f}x{:.1f}mm, corresponding to {:.1f}x{:.1f}px in 72dpi.".format(H, W, H_px, W_px))
 
     # Creazione file e impostazioni generali
     pdf = FPDF(orientation='L', unit='mm', format='A4')
