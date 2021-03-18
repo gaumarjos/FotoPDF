@@ -4,6 +4,9 @@
 from os import listdir
 from os.path import isfile, join, getsize
 from fpdf import FPDF
+#from PIL import Image
+#import sys
+#from pdfrw import PageMerge, PdfReader, PdfWriter
 import re
 import getopt
 import sys
@@ -51,7 +54,7 @@ def main(argv):
     # Creazione file e impostazioni generali
     pdf = FPDF(orientation='L', unit='mm', format='A4')
     #pdf = FPDF(orientation='L', unit='pt', format=(750, 1000))
-    pdf.set_compression(False)
+    pdf.set_compression(True)
     pdf.set_margins(0, 0, 0)
     pdf.set_auto_page_break(False)
     pdf.set_fill_color(255, 255, 255)
@@ -202,3 +205,17 @@ if __name__ == "__main__":
 #     print(possibili_righe[max_to_min_sort_index][:4])
 #     print(possibili_colonne[max_to_min_sort_index][:4])
 #     print(aree_risultanti[max_to_min_sort_index][:4])
+
+
+# def new_content():
+#     ...
+#
+# reader = PdfReader(fdata=bytes(pdf.output()))
+#         return reader
+#
+#     ciao = new_content()
+#
+#     y = PdfWriter()
+#     for i in range(len(ciao.pages)):
+#         y.addpage(ciao.pages[i])
+#     y.write('result.pdf')
