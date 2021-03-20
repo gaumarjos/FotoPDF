@@ -15,12 +15,19 @@ import getopt
 import sys
 import json
 from reportlab.pdfgen import canvas
-from reportlab.platypus import Image, Flowable
+from reportlab.platypus import Image, Flowable, Paragraph
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.pagesizes import A4, landscape
 import reportlab.rl_config
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+
+
+# Constants
+USE_FPDF = True
+USE_RL = True
+MM2PT = 2.83465
 
 
 def atoi(text):
@@ -52,11 +59,39 @@ def RLCenteredText(c, text, font, size, page_height, page_width, y, black=True):
     c.drawString((page_width - text_width) / 2.0, page_height-y, text)
 
 
-def main(argv):
+def RLDescriptionText(c, text, font, size, interline, from_side, from_top, page_width, page_height):
+    stylesheet = getSampleStyleSheet()
+    style = stylesheet['BodyText']
+    style.fontSize = size
+    style.fontName = font
+    style.leading = size + interline
+    p = Paragraph(text, style)
+    aW = page_width - (from_side * MM2PT * 2)
+    #aH = page_height - (from_top * MM2PT * 2)
+    aH = 400
+    w, h = p.wrap(aW, aH)
+    if w <= aW and h <= aH:
+        p.drawOn(c,
+                 from_side * MM2PT,
+                 page_height - from_top * MM2PT)
+        #         (page_height - (2 * from_top * MM2PT)) / 2)
 
-    # Constants
-    USE_FPDF = True
-    USE_RL = True
+        aH = aH - h  # reduce the available height
+    else:
+        pass
+
+
+def RLCenteredImage(c, image, from_side, page_width, page_height):
+    original_image_size = PIL.Image.open(image).size
+    wanted_width = page_width - from_side * 2
+    ratio = wanted_width / original_image_size[0]
+    wanted_height = original_image_size[1] * ratio
+    im = Image(image, width=wanted_width, height=wanted_height)
+    im.hAlign = 'CENTER'
+    im.drawOn(c, from_side, page_height - from_side - wanted_height)
+
+
+def main(argv):
 
     # Valori default
     input_folder = "."
@@ -110,7 +145,7 @@ def main(argv):
 
     if USE_RL:
         WIDTH, HEIGHT = landscape(A4)
-        MM2PT = 2.83465
+        print("W: {}, H: {}".format(WIDTH, HEIGHT))
 
         full_output_filename_reportlab = join(input_folder, output_filename + "reportlab.pdf")
         c = canvas.Canvas(full_output_filename_reportlab, enforceColorSpace='RGB')
@@ -144,7 +179,6 @@ def main(argv):
                              int(obj['cover']['author']['from_top']), obj["cover"]["author"]["black_text"])
         if USE_RL:
             original_image_size = PIL.Image.open(join(input_folder, images[obj["cover"]["useimage"]-1])).size
-            print(original_image_size)
             c.drawImage(join(input_folder, images[obj["cover"]["useimage"]-1]), (WIDTH-original_image_size[0])/2, 0,
                         width=None, height=HEIGHT, preserveAspectRatio=True)
             RLCenteredText(c, obj['cover']['title']['string'], 'myfont', int(obj['cover']['title']['size']), HEIGHT, WIDTH,
@@ -155,23 +189,45 @@ def main(argv):
 
     # Pagina testo
     if bool(obj['description']['show']):
-        pdf.add_page()
-        pdf.set_y(int(obj['description']['from_top']))
-        pdf.set_x(int(obj['description']['from_side']))
-        pdf.set_font_size(int(obj['description']['size']))
-        pdf.multi_cell(w=W-int(obj['description']['from_side'])*2, h=int(obj['description']['interline']), txt=obj['description']['string'], border=0, align="L", fill=False)
+        if USE_FPDF:
+            pdf.add_page()
+            pdf.set_y(int(obj['description']['from_top']))
+            pdf.set_x(int(obj['description']['from_side']))
+            pdf.set_font_size(int(obj['description']['size']))
+            pdf.multi_cell(w=W-int(obj['description']['from_side'])*2, h=int(obj['description']['interline']), txt=obj['description']['string'], border=0, align="L", fill=False)
+
+        if USE_RL:
+            #t = c.beginText()
+            #t.setTextOrigin(int(obj['description']['from_side']*MM2PT), int(HEIGHT-obj['description']['from_top']*MM2PT))
+            #t.setFont('myfont', 16)
+            #t.textLine(obj['description']['string'])
+            #c.drawText(t)
+
+            RLDescriptionText(c, obj['description']['string'], 'myfont', obj['description']['size'],
+                              obj['description']['interline'], obj['description']['from_side'],
+                              obj['description']['from_top'], WIDTH, HEIGHT)
+            c.showPage()
 
     # Aggiungi immagini
-    pdf.set_font_size(int(obj['photos']['size']))
-    for i, image in enumerate(images):
-        pdf.add_page()
-        pdf.image(join(input_folder, image), x=12, y=10, w=W-24, h=0, type="JPEG")
-        pdf.set_y(H - 16)
-        pdf.set_x(int(obj['photos']['from_side']))
-        pdf.multi_cell(w=W - int(obj['photos']['from_side']) * 2, h=int(obj['photos']['interline']),
-                       txt=str(obj['photos']['captions'][i]['caption']), border=0, align="L", fill=False)
-        # Write number of photo in sequence
-        #pdf.cell(0, 12, str(i + 1), 0, 1, align="C", fill=False)
+    if USE_FPDF:
+        pdf.set_font_size(int(obj['photos']['size']))
+        for i, image in enumerate(images):
+            pdf.add_page()
+            pdf.image(join(input_folder, image), x=12, y=10, w=W-24, h=0, type="JPEG")
+            pdf.set_y(H - 16)
+            pdf.set_x(int(obj['photos']['from_side']))
+            pdf.multi_cell(w=W - int(obj['photos']['from_side']) * 2, h=int(obj['photos']['interline']),
+                           txt=str(obj['photos']['captions'][i]['caption']), border=0, align="L", fill=False)
+            # Write number of photo in sequence
+            #pdf.cell(0, 12, str(i + 1), 0, 1, align="C", fill=False)
+
+    if USE_RL:
+        for i, image in enumerate(images):
+            RLCenteredImage(c, join(input_folder, image), 24, WIDTH, HEIGHT)
+            RLDescriptionText(c, obj['photos']['captions'][i]['caption'], 'myfont', obj['photos']['size'],
+                              obj['photos']['interline'], obj['photos']['from_side'],
+                              200, WIDTH, HEIGHT)
+            c.showPage()
 
     # Pagina contact sheet
     pdf.add_page()
