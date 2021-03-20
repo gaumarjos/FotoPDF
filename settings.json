@@ -1,9 +1,9 @@
 {
   "document": {
-    "title": "Turbanti Emiliani",
+    "title": "Casari e Bergamini col turbante",
     "author": "Stefano Salati",
-    "height": 210,
-    "width": 297
+    "width": 1024,
+    "height": 768
   },
   "font": {
     "family": "Helvetica",
@@ -12,73 +12,70 @@
   },
   "cover": {
     "show": 1,
-    "useimage": 6,
+    "useimage": 7,
     "black_background": 1,
     "title": {
-      "string": "Turbanti Emiliani",
-      "size": 48,
-      "from_top": 30,
-      "_from_top": 94,
+      "size": 80,
+      "from_top": 160,
       "black_text": 0
     },
     "author": {
-      "size": 30,
-      "from_top": 200,
-      "_from_top": 118,
+      "size": 50,
+      "from_top": 740,
       "black_text": 0
     }
   },
   "description": {
     "show": 1,
-    "string": "In Emilia esiste dagli anni '90 una comunità indiana di religione sikh molto numerosa, perfettamente integrata e attiva in tutti i settori. Tanti membri di questa comunità lavorano nelle centinaia di aziende agricole che punteggiano la regione, occupandosi sia della cura delle vacche sia della produzione di Parmigiano Reggiano. Si può affermare che senza il loro supporto questo settore e il giro d'affari di 1,4 mld che ruota intorno a questo prodotto DOP non sarebbe possibile.\nIn alcune aziende lavorano quasi esclusivamente sikh svolgendo tutte le attività: dal bergamino al casaro responsabile per l'intera produzione.\nQualsiasi sia la mansione, il lavoro nelle stalle e nei caseifici è molto duro. Non solo per la fatica fisica ma soprattutto perché è richiesta una presenza costante. I fine settimana non esistono e una giornata tipo inizia prestissimo, alle 3 del mattino e continua fino a fine mattinata, per poi ricominciare a metà pomeriggio fino a sera. Non è difficile immaginare come molti lavori possano facilmente diventare una “prigione dolce” dove la vita è tutto sommato buona ma da cui non ci si può allontanare.\nIl lavoro descrive un caseificio e due stalle, mandati avanti col significativo contributo dei membri di questa comunità. Lavoro e scorci di vita privata di Parmjit Saini, trasferitosi dall'India nel 2000 che lavora con le vacche rosse reggiane, una razza che produce meno latte ma molto pregiato a Roncadella (RE). Taljit Singh, che ha iniziato in Italia a 26 anni come aiutante e ora, dopo 20, è il casaro a Gattatico (RE) aiutato dal cognato Mandip. Infine, Satnam e Pal, bergamini nella stessa azienda.\nCon i colori ho voluto rappresentare le sensazioni e i contrasti che ho provato ad essere lì: tranquillità a casa e movimento al lavoro, freddo fuori e umidità appiccisosa nelle fosse di mungitura e davanti alle caldaie e, più evidenti, le forti luci artificiali che contrastano col buio fuori.",
-    "size": 14,
-    "from_side": 24,
-    "from_top": 35,
+    "string": "In Emilia esiste dagli anni '90 una comunità indiana di religione sikh molto numerosa, perfettamente integrata e attiva in tutti i settori. Tanti membri di questa comunità lavorano nelle centinaia di aziende agricole che punteggiano la regione, occupandosi sia della cura delle vacche sia della produzione di Parmigiano Reggiano. Si può affermare che senza il loro supporto questo settore e il giro d'affari di 1,4 mld che ruota intorno a questo prodotto DOP non sarebbero possibili.<br/>In alcune aziende lavorano quasi esclusivamente sikh, che svolgono tutte le attività: dal bergamino al casaro responsabile dell'intera produzione.\nQualsiasi sia la mansione, il lavoro nelle stalle e nei caseifici è molto duro. Non solo per la fatica fisica ma soprattutto perché è richiesta una presenza costante. I fine settimana non esistono e una giornata tipo inizia prestissimo, alle 3 del mattino e continua fino a fine mattinata, per poi ricominciare a metà pomeriggio fino a sera. Non è difficile immaginare come molti lavori possano facilmente diventare una “prigione dolce” dove la vita è tutto sommato buona ma da cui non ci si può allontanare.\nIl lavoro descrive un caseificio e due stalle, mandati avanti col significativo contributo dei membri di questa comunità. Lavoro e scorci di vita privata di Parmjit Saini, trasferitosi dall'India nel 2000 che lavora con le vacche rosse reggiane, una razza che produce meno latte ma molto pregiato a Roncadella (RE). Taljit Singh, che ha iniziato in Italia a 26 anni come aiutante e ora, dopo 20, è il casaro a Gattatico (RE) aiutato dal cognato Mandip. Infine, Satnam e Pal, bergamini nella stessa azienda.\nCon i colori ho voluto rappresentare le sensazioni e i contrasti che ho provato ad essere lì: tranquillità a casa e movimento al lavoro, freddo fuori e umidità appiccicosa nelle fosse di mungitura e davanti alle caldaie e, più evidenti, le forti luci artificiali che contrastano col buio fuori.",
+    "size": 16,
+    "from_side": 100,
+    "from_top": 128,
     "interline": 8
   },
   "contactsheet": {
     "black_background": 0,
     "rows": 4,
     "columns": 6,
-    "horizontal_margin": 5,
-    "vertical_margin": 5,
-    "lateral_margin": 10
+    "horizontal_margin": 14,
+    "vertical_margin": 14,
+    "lateral_margin": 28
   },
   "final": {
     "show": 1,
     "author": {
       "show": 1,
       "size": 40,
-      "from_top": 84
+      "from_top": 360
     },
     "website": {
       "show": 0,
       "string": "www.stefanosalati.com",
       "size": 20,
-      "from_top": 105
+      "from_top": 400
     },
     "email": {
       "show": 1,
       "string": "ste.salati@protonmail.com",
       "size": 20,
-      "from_top": 105
+      "from_top": 400
     },
     "phone": {
       "show": 1,
       "string": "3481011471",
       "size": 20,
-      "from_top": 115
+      "from_top": 430
     },
     "disclaimer": {
       "show": 1,
       "string": "Masterclass di Reportage con FotoImage di Fulvio Bugani, 2020-2021.",
       "size": 20,
-      "from_top": 190
+      "from_top": 700
     }
   },
   "photos": {
-    "size": 12,
-    "from_side": 12,
+    "size": 16,
+    "from_side": 24,
     "interline": 6,
     "captions": [
       {
