@@ -5,29 +5,28 @@
 # https://www.reportlab.com/docs/reportlab-userguide.pdf
 
 from os import listdir
-from os.path import isfile, join, getsize
+from os.path import join, getsize  #, isfile
 from fpdf import FPDF
 import PIL.Image
-#import sys
-#from pdfrw import PageMerge, PdfReader, PdfWriter
+# import sys
+# from pdfrw import PageMerge, PdfReader, PdfWriter
 import re
 import getopt
 import sys
 import json
 from reportlab.pdfgen import canvas
-from reportlab.platypus import Image, Flowable, Paragraph
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.lib.pagesizes import A4, landscape
+from reportlab.platypus import Paragraph  #, Image, Flowable
+from reportlab.lib.styles import getSampleStyleSheet  #, ParagraphStyle
+#from reportlab.lib.pagesizes import A4, landscape
 import reportlab.rl_config
-reportlab.rl_config.warnOnMissingFontGlyphs = 0
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
 
 # Constants
-USE_FPDF = True
+USE_FPDF = False
 USE_RL = True
-MM2PT = 2.83465
 
 
 def atoi(text):
@@ -54,31 +53,31 @@ def RLCenteredText(c, text, font, size, page_height, page_width, y, black=True):
     if black:
         c.setFillColorRGB(0, 0, 0)
     else:
-        c.setFillColorRGB(0.9, 0.9, 0.9)
+        c.setFillColorRGB(1, 1, 1)
     text_width = c.stringWidth(text, font, size)
-    c.drawString((page_width - text_width) / 2.0, page_height-y, text)
+    c.drawString((page_width - text_width) / 2.0, page_height - y, text)
+    # Alternative solution
+    # t = c.beginText()
+    # t.setTextOrigin(int(obj['description']['from_side']*MM2PT), int(H-obj['description']['from_top']*MM2PT))
+    # t.setFont('myfont', 16)
+    # t.textLine(obj['description']['string'])
+    # c.drawText(t)
 
 
-def RLDescriptionText(c, text, font, size, interline, from_side, from_top, page_width, page_height):
+def RLText(c, text, font, size, interline, from_side, from_top, page_width, page_height):
     stylesheet = getSampleStyleSheet()
     style = stylesheet['BodyText']
     style.fontSize = size
     style.fontName = font
     style.leading = size + interline
     p = Paragraph(text, style)
-    aW = page_width - (from_side * MM2PT * 2)
-    #aH = page_height - (from_top * MM2PT * 2)
-    aH = 400
+    aW = page_width - (from_side * 2)
+    aH = page_height - from_top
     w, h = p.wrap(aW, aH)
     if w <= aW and h <= aH:
-        p.drawOn(c,
-                 from_side * MM2PT,
-                 page_height - from_top * MM2PT)
-        #         (page_height - (2 * from_top * MM2PT)) / 2)
-
-        aH = aH - h  # reduce the available height
+        p.drawOn(c, from_side, page_height - from_top - h)
     else:
-        pass
+        print("Error: text cell too small for text.")
 
 
 def RLCenteredImage(c, image, from_side, page_width, page_height):
@@ -86,23 +85,30 @@ def RLCenteredImage(c, image, from_side, page_width, page_height):
     wanted_width = page_width - from_side * 2
     ratio = wanted_width / original_image_size[0]
     wanted_height = original_image_size[1] * ratio
-    im = Image(image, width=wanted_width, height=wanted_height)
-    im.hAlign = 'CENTER'
-    im.drawOn(c, from_side, page_height - from_side - wanted_height)
+    c.drawImage(image,
+                x=from_side,
+                y=page_height - from_side - wanted_height,
+                width=wanted_width,
+                height=wanted_height,
+                mask=None)
+    # Alternative solution (to be used only if used also in the grid,
+    # otherwise the images are not recognised as the same and saved twice in the file.
+    # im = Image(image, width=wanted_width, height=wanted_height)
+    # im.hAlign = 'CENTER'
+    # im.drawOn(c, from_side, page_height - from_side - wanted_height)
 
 
 def main(argv):
-
-    # Valori default
+    # Default
     input_folder = "."
     output_filename = "slides"
 
-    # Interpretazione linea di comando
+    # Command line
     try:
         opts, args = getopt.getopt(argv, "i:o:",
                                    ["input_folder=", "output_filename="])
     except getopt.GetoptError:
-        print("Dai su...")
+        print("Error: wrong arguments.")
         sys.exit(2)
     for opt, arg in opts:
         if opt in ("-i", "--input_folder"):
@@ -111,20 +117,19 @@ def main(argv):
             output_filename = arg
 
     # Lettura JSON
-    with open(input_folder+'settings.json', 'r') as myjson:
+    with open(input_folder + 'settings.json', 'r') as myjson:
         data = myjson.read()
     obj = json.loads(data)
+    H = obj["document"]["height"]
+    W = obj["document"]["width"]
+    print("Slide format: {:d}x{:d}pt.".format(H, W))
 
     # Creazione file e impostazioni generali
     if USE_FPDF:
-        H = obj["document"]["height"]
-        W = obj["document"]["width"]
-        H_px = H * 0.0393701 * 72
-        W_px = W * 0.0393701 * 72
-        print("File format: {:.1f}x{:.1f}mm, corresponding to {:.1f}x{:.1f}px in 72dpi.".format(H, W, H_px, W_px))
-
+        # Constructor
+        print("Generating PDF with FPDF...")
         full_output_filename = join(input_folder, output_filename + ".pdf")
-        pdf = FPDF(orientation='L', unit='mm', format='A4')
+        pdf = FPDF(orientation='L', unit='pt', format=(H, W))
         pdf.set_compression(True)
         pdf.set_margins(0, 0, 0)
         pdf.set_auto_page_break(False)
@@ -137,108 +142,93 @@ def main(argv):
         if bool(obj["font"]["usemyfont"]):
             try:
                 pdf.add_font('myfont', '', obj["font"]["myfont"], uni=True)
-                pdf.set_font('myfont', '', 48)
+                pdf.set_font('myfont', '', 16)
             except:
-                pdf.set_font(obj["font"]["family"], '', 48)
+                print("Error: cannot load font.")
+                pdf.set_font(obj["font"]["family"], '', 16)
         else:
-            pdf.set_font(obj["font"]["family"], '', 48)
+            pdf.set_font(obj["font"]["family"], '', 16)
 
     if USE_RL:
-        WIDTH, HEIGHT = landscape(A4)
-        print("W: {}, H: {}".format(WIDTH, HEIGHT))
-
-        full_output_filename_reportlab = join(input_folder, output_filename + "reportlab.pdf")
+        # Constructor
+        print("Generating PDF with Reportlab...")
+        full_output_filename_reportlab = join(input_folder, output_filename + "_reportlab.pdf")
         c = canvas.Canvas(full_output_filename_reportlab, enforceColorSpace='RGB')
-        c.setPageSize((landscape(A4)))
+        c.setPageSize((W, H))
         c.setTitle(obj["document"]["title"])
         c.setAuthor(obj["document"]["author"])
 
         # Use user-defined True Type Font (TTF)
-        if bool(obj["font"]["usemyfont"]):
-            try:
-                pdfmetrics.registerFont(TTFont('myfont', obj["font"]["myfont"]))
-                c.setFont('myfont', 32)
-            except:
-                pass
-        else:
-            pass
+        pdfmetrics.registerFont(TTFont('myfont', obj["font"]["myfont"]))
+        c.setFont('myfont', 16)
 
     # Ricerca immagini
     images = [f for f in listdir(input_folder) if f.endswith(".jpg")]
     images.sort(key=natural_keys)
 
-    # Copertina
+    # Cover page
     if bool(obj['cover']['show']):
         if USE_FPDF:
             pdf.add_page()
             if obj["cover"]["useimage"] >= 0:
-                pdf.image(join(input_folder, images[obj["cover"]["useimage"]-1]), x=-10, y=0, w=0, h=H, type="JPEG")
-            FPDFCenteredText(pdf, obj['cover']['title']['string'], 'myfont', int(obj['cover']['title']['size']),
+                pdf.image(join(input_folder, images[obj["cover"]["useimage"] - 1]), x=-10, y=0, w=0, h=H, type="JPEG")
+            FPDFCenteredText(pdf, obj['document']['title'], 'myfont', int(obj['cover']['title']['size']),
                              int(obj['cover']['title']['from_top']), obj["cover"]["title"]["black_text"])
             FPDFCenteredText(pdf, obj["document"]["author"], 'myfont', int(obj['cover']['author']['size']),
                              int(obj['cover']['author']['from_top']), obj["cover"]["author"]["black_text"])
         if USE_RL:
-            original_image_size = PIL.Image.open(join(input_folder, images[obj["cover"]["useimage"]-1])).size
-            c.drawImage(join(input_folder, images[obj["cover"]["useimage"]-1]), (WIDTH-original_image_size[0])/2, 0,
-                        width=None, height=HEIGHT, preserveAspectRatio=True)
-            RLCenteredText(c, obj['cover']['title']['string'], 'myfont', int(obj['cover']['title']['size']), HEIGHT, WIDTH,
-                           int(obj['cover']['title']['from_top'] * MM2PT), obj["cover"]["title"]["black_text"])
-            RLCenteredText(c, obj["document"]["author"], 'myfont', int(obj['cover']['author']['size']), HEIGHT, WIDTH,
-                           int(obj['cover']['author']['from_top'] * MM2PT), obj["cover"]["author"]["black_text"])
+            original_image_size = PIL.Image.open(join(input_folder, images[obj["cover"]["useimage"] - 1])).size
+            c.drawImage(join(input_folder, images[obj["cover"]["useimage"] - 1]), (W - original_image_size[0]) / 2, 0,
+                        width=None, height=H, preserveAspectRatio=True)
+            RLCenteredText(c, obj['document']['title'], 'myfont', int(obj['cover']['title']['size']), H, W,
+                           int(obj['cover']['title']['from_top']), obj["cover"]["title"]["black_text"])
+            RLCenteredText(c, obj["document"]["author"], 'myfont', int(obj['cover']['author']['size']), H, W,
+                           int(obj['cover']['author']['from_top']), obj["cover"]["author"]["black_text"])
             c.showPage()
 
-    # Pagina testo
+    # Text page
     if bool(obj['description']['show']):
         if USE_FPDF:
             pdf.add_page()
             pdf.set_y(int(obj['description']['from_top']))
             pdf.set_x(int(obj['description']['from_side']))
             pdf.set_font_size(int(obj['description']['size']))
-            pdf.multi_cell(w=W-int(obj['description']['from_side'])*2, h=int(obj['description']['interline']), txt=obj['description']['string'], border=0, align="L", fill=False)
+            pdf.multi_cell(w=W - int(obj['description']['from_side']) * 2, h=int(obj['description']['interline']),
+                           txt=obj['description']['string'], border=0, align="L", fill=False)
 
         if USE_RL:
-            #t = c.beginText()
-            #t.setTextOrigin(int(obj['description']['from_side']*MM2PT), int(HEIGHT-obj['description']['from_top']*MM2PT))
-            #t.setFont('myfont', 16)
-            #t.textLine(obj['description']['string'])
-            #c.drawText(t)
-
-            RLDescriptionText(c, obj['description']['string'], 'myfont', obj['description']['size'],
-                              obj['description']['interline'], obj['description']['from_side'],
-                              obj['description']['from_top'], WIDTH, HEIGHT)
+            text = obj['description']['string']
+            text = text.replace("\n", "<br/>")
+            RLText(c, text, 'myfont', obj['description']['size'],
+                   obj['description']['interline'], obj['description']['from_side'],
+                   obj['description']['from_top'], W, H)
             c.showPage()
 
-    # Aggiungi immagini
+    # Full-page images
     if USE_FPDF:
         pdf.set_font_size(int(obj['photos']['size']))
         for i, image in enumerate(images):
             pdf.add_page()
-            pdf.image(join(input_folder, image), x=12, y=10, w=W-24, h=0, type="JPEG")
+            pdf.image(join(input_folder, image), x=12, y=10, w=W - 24, h=0, type="JPEG")
             pdf.set_y(H - 16)
             pdf.set_x(int(obj['photos']['from_side']))
             pdf.multi_cell(w=W - int(obj['photos']['from_side']) * 2, h=int(obj['photos']['interline']),
                            txt=str(obj['photos']['captions'][i]['caption']), border=0, align="L", fill=False)
-            # Write number of photo in sequence
-            #pdf.cell(0, 12, str(i + 1), 0, 1, align="C", fill=False)
 
     if USE_RL:
         for i, image in enumerate(images):
-            RLCenteredImage(c, join(input_folder, image), 24, WIDTH, HEIGHT)
-            RLDescriptionText(c, obj['photos']['captions'][i]['caption'], 'myfont', obj['photos']['size'],
-                              obj['photos']['interline'], obj['photos']['from_side'],
-                              200, WIDTH, HEIGHT)
+            RLCenteredImage(c, join(input_folder, image), 24, W, H)
+            RLText(c, obj['photos']['captions'][i]['caption'], 'myfont', obj['photos']['size'],
+                   obj['photos']['interline'], obj['photos']['from_side'],
+                   690, W, H)
             c.showPage()
 
-    # Pagina contact sheet
-    pdf.add_page()
+    # Grid
     R = int(obj['contactsheet']['rows'])
     C = int(obj['contactsheet']['columns'])
     m_oriz = obj["contactsheet"]["horizontal_margin"]
     m_vert = obj["contactsheet"]["vertical_margin"]
     m_lat = obj["contactsheet"]["lateral_margin"]
-    if bool(obj['contactsheet']['black_background']):
-        pdf.set_fill_color(0, 0, 0)
-        pdf.cell(0, H, "", 0, 1, align="C", fill=True)
 
     # Parto dalle colonne e vedo se l'altezza sta nei margini
     w = (W - 2 * m_lat - (C - 1) * m_oriz) / C
@@ -252,38 +242,113 @@ def main(argv):
         if total_w > W:
             print("Non può essere.")
 
-    for i, image in enumerate(images):
-        pdf.image(join(input_folder, image), x=(W - (C * w + (C - 1) * m_oriz)) / 2 + (i % C) * (w + m_oriz),
-                  y=(H - (R * h + (R - 1) * m_vert)) / 2 + int(i / C) * (h + m_vert), w=w, h=0)
+    if USE_FPDF:
+        pdf.add_page()
+        if bool(obj['contactsheet']['black_background']):
+            pdf.set_fill_color(0, 0, 0)
+            pdf.cell(0, H, "", 0, 1, align="C", fill=True)
+        for i, image in enumerate(images):
+            pdf.image(join(input_folder, image),
+                      x=(W - (C * w + (C - 1) * m_oriz)) / 2 + (i % C) * (w + m_oriz),
+                      y=(H - (R * h + (R - 1) * m_vert)) / 2 + int(i / C) * (h + m_vert),
+                      w=w, h=0)
+    if USE_RL:
+        for i, image in enumerate(images):
+            c.drawImage(join(input_folder, image),
+                        x=(W - (C * w + (C - 1) * m_oriz)) / 2 + (i % C) * (w + m_oriz),
+                        y=H - h - ((H - (R * h + (R - 1) * m_vert)) / 2 + int(i / C) * (h + m_vert)),
+                        width=w,
+                        height=h,
+                        mask=None)
+        c.showPage()
 
     # Pagina finale
-    if True:
-        pdf.add_page()
+    if obj['final']['show']:
+        if USE_FPDF:
+            pdf.add_page()
 
         if bool(obj['final']['author']['show']):
-            pdf.set_y(int(obj['final']['author']['from_top']))
-            pdf.set_font_size(int(obj['final']['author']['size']))
-            pdf.cell(0, 0, obj["document"]["author"], 0, 1, align="C", fill=False)
+            if USE_FPDF:
+                FPDFCenteredText(pdf,
+                                 obj['document']['author'],
+                                 'myfont',
+                                 obj['final']['author']['size'],
+                                 obj['final']['author']['from_top'], black=True)
+            if USE_RL:
+                RLCenteredText(c,
+                               obj['document']['author'],
+                               'myfont',
+                               obj['final']['author']['size'],
+                               H, W,
+                               obj['final']['author']['from_top'],
+                               True)
 
         if bool(obj['final']['website']['show']):
-            pdf.set_y(int(obj['final']['website']['from_top']))
-            pdf.set_font_size(int(obj['final']['website']['size']))
-            pdf.cell(0, 0, obj['final']['website']['string'], 0, 1, align="C", fill=False)
+            if USE_FPDF:
+                FPDFCenteredText(pdf,
+                                 obj['final']['website']['string'],
+                                 'myfont',
+                                 obj['final']['website']['size'],
+                                 obj['final']['website']['from_top'], black=True)
+            if USE_RL:
+                RLCenteredText(c,
+                               obj['final']['website']['string'],
+                               'myfont',
+                               obj['final']['website']['size'],
+                               H, W,
+                               obj['final']['website']['from_top'],
+                               True)
 
         if bool(obj['final']['email']['show']):
-            pdf.set_y(int(obj['final']['email']['from_top']))
-            pdf.set_font_size(int(obj['final']['email']['size']))
-            pdf.cell(0, 0, obj['final']['email']['string'], 0, 1, align="C", fill=False)
+            if USE_FPDF:
+                FPDFCenteredText(pdf,
+                                 obj['final']['email']['string'],
+                                 'myfont',
+                                 obj['final']['email']['size'],
+                                 obj['final']['email']['from_top'], black=True)
+            if USE_RL:
+                RLCenteredText(c,
+                               obj['final']['email']['string'],
+                               'myfont',
+                               obj['final']['email']['size'],
+                               H, W,
+                               obj['final']['email']['from_top'],
+                               True)
 
         if bool(obj['final']['phone']['show']):
-            pdf.set_y(int(obj['final']['phone']['from_top']))
-            pdf.set_font_size(int(obj['final']['phone']['size']))
-            pdf.cell(0, 0, obj['final']['phone']['string'], 0, 1, align="C", fill=False)
+            if USE_FPDF:
+                FPDFCenteredText(pdf,
+                                 obj['final']['phone']['string'],
+                                 'myfont',
+                                 obj['final']['phone']['size'],
+                                 obj['final']['phone']['from_top'], black=True)
+            if USE_RL:
+                RLCenteredText(c,
+                               obj['final']['phone']['string'],
+                               'myfont',
+                               obj['final']['phone']['size'],
+                               H, W,
+                               obj['final']['phone']['from_top'],
+                               True)
 
-        if bool(obj['final']['disclaimer']['show']):
-            pdf.set_y(int(obj['final']['disclaimer']['from_top']))
-            pdf.set_font_size(int(obj['final']['disclaimer']['size']))
-            pdf.cell(0, 0, obj['final']['disclaimer']['string'], 0, 1, align="C", fill=False)
+        if bool(obj['final']['phone']['show']):
+            if USE_FPDF:
+                FPDFCenteredText(pdf,
+                                 obj['final']['disclaimer']['string'],
+                                 'myfont',
+                                 obj['final']['disclaimer']['size'],
+                                 obj['final']['disclaimer']['from_top'], black=True)
+            if USE_RL:
+                RLCenteredText(c,
+                               obj['final']['disclaimer']['string'],
+                               'myfont',
+                               obj['final']['disclaimer']['size'],
+                               H, W,
+                               obj['final']['disclaimer']['from_top'],
+                               True)
+
+        if USE_RL:
+            c.showPage()
 
     # Salva
     if USE_FPDF:
@@ -291,12 +356,12 @@ def main(argv):
         print("{:s} created ({:.1f}MB)!".format(full_output_filename, getsize(full_output_filename) / 1000000.))
     if USE_RL:
         c.save()
-        print("{:s} created ({:.1f}MB)!".format(full_output_filename_reportlab, getsize(full_output_filename_reportlab) / 1000000.))
+        print("{:s} created ({:.1f}MB)!".format(full_output_filename_reportlab,
+                                                getsize(full_output_filename_reportlab) / 1000000.))
 
 
 if __name__ == "__main__":
     main(sys.argv[1:])
-
 
 # if C == -1 or R == -1:
 #     print("Calcolo miglior disposizione griglia...")
