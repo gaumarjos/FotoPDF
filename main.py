@@ -1,16 +1,27 @@
 # Stefano Salati 2021-03-17
 # Untested, have fun!
 
+# Docs
+# https://www.reportlab.com/docs/reportlab-userguide.pdf
+
 from os import listdir
 from os.path import isfile, join, getsize
 from fpdf import FPDF
-#from PIL import Image
+import PIL.Image
 #import sys
 #from pdfrw import PageMerge, PdfReader, PdfWriter
 import re
 import getopt
 import sys
 import json
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Image, Flowable
+from reportlab.lib.pagesizes import A4, landscape
+import reportlab.rl_config
+reportlab.rl_config.warnOnMissingFontGlyphs = 0
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
 
 def atoi(text):
     return int(text) if text.isdigit() else text
@@ -20,7 +31,32 @@ def natural_keys(text):
     return [atoi(c) for c in re.split(r'(\d+)', text)]
 
 
+def FPDFCenteredText(p, text, font, size, y, black=True):
+    p.set_y(y)
+    p.set_font(font, '', size)
+    if black:
+        p.set_text_color(0, 0, 0)
+    else:
+        p.set_text_color(255, 255, 255)
+    p.cell(0, 0, text, 0, 1, align="C", fill=False)
+    p.set_text_color(0, 0, 0)
+
+
+def RLCenteredText(c, text, font, size, page_height, page_width, y, black=True):
+    c.setFont(font, size)
+    if black:
+        c.setFillColorRGB(0, 0, 0)
+    else:
+        c.setFillColorRGB(0.9, 0.9, 0.9)
+    text_width = c.stringWidth(text, font, size)
+    c.drawString((page_width - text_width) / 2.0, page_height-y, text)
+
+
 def main(argv):
+
+    # Constants
+    USE_FPDF = True
+    USE_RL = True
 
     # Valori default
     input_folder = "."
@@ -44,32 +80,53 @@ def main(argv):
         data = myjson.read()
     obj = json.loads(data)
 
-    # Dimensioni foglio A4 in mm
-    H = obj["document"]["height"]
-    W = obj["document"]["width"]
-    H_px = H * 0.0393701 * 72
-    W_px = W * 0.0393701 * 72
-    print("File format: {:.1f}x{:.1f}mm, corresponding to {:.1f}x{:.1f}px in 72dpi.".format(H, W, H_px, W_px))
-
     # Creazione file e impostazioni generali
-    pdf = FPDF(orientation='L', unit='mm', format='A4')
-    #pdf = FPDF(orientation='L', unit='pt', format=(750, 1000))
-    pdf.set_compression(True)
-    pdf.set_margins(0, 0, 0)
-    pdf.set_auto_page_break(False)
-    pdf.set_fill_color(255, 255, 255)
-    pdf.set_text_color(0, 0, 0)
-    pdf.set_title(obj["document"]["title"])
-    pdf.set_author(obj["document"]["author"])
+    if USE_FPDF:
+        H = obj["document"]["height"]
+        W = obj["document"]["width"]
+        H_px = H * 0.0393701 * 72
+        W_px = W * 0.0393701 * 72
+        print("File format: {:.1f}x{:.1f}mm, corresponding to {:.1f}x{:.1f}px in 72dpi.".format(H, W, H_px, W_px))
 
-    if bool(obj["font"]["usemyfont"]):
-        try:
-            pdf.add_font('myfont', '', obj["font"]["myfont"], uni=True)
-            pdf.set_font('myfont', '', 48)
-        except:
+        full_output_filename = join(input_folder, output_filename + ".pdf")
+        pdf = FPDF(orientation='L', unit='mm', format='A4')
+        pdf.set_compression(True)
+        pdf.set_margins(0, 0, 0)
+        pdf.set_auto_page_break(False)
+        pdf.set_fill_color(255, 255, 255)
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_title(obj["document"]["title"])
+        pdf.set_author(obj["document"]["author"])
+
+        # Use user-defined True Type Font (TTF)
+        if bool(obj["font"]["usemyfont"]):
+            try:
+                pdf.add_font('myfont', '', obj["font"]["myfont"], uni=True)
+                pdf.set_font('myfont', '', 48)
+            except:
+                pdf.set_font(obj["font"]["family"], '', 48)
+        else:
             pdf.set_font(obj["font"]["family"], '', 48)
-    else:
-        pdf.set_font(obj["font"]["family"], '', 48)
+
+    if USE_RL:
+        WIDTH, HEIGHT = landscape(A4)
+        MM2PT = 2.83465
+
+        full_output_filename_reportlab = join(input_folder, output_filename + "reportlab.pdf")
+        c = canvas.Canvas(full_output_filename_reportlab, enforceColorSpace='RGB')
+        c.setPageSize((landscape(A4)))
+        c.setTitle(obj["document"]["title"])
+        c.setAuthor(obj["document"]["author"])
+
+        # Use user-defined True Type Font (TTF)
+        if bool(obj["font"]["usemyfont"]):
+            try:
+                pdfmetrics.registerFont(TTFont('myfont', obj["font"]["myfont"]))
+                c.setFont('myfont', 32)
+            except:
+                pass
+        else:
+            pass
 
     # Ricerca immagini
     images = [f for f in listdir(input_folder) if f.endswith(".jpg")]
@@ -77,29 +134,24 @@ def main(argv):
 
     # Copertina
     if bool(obj['cover']['show']):
-        pdf.add_page()
-
-        if bool(obj['cover']['black_background']):
-            pdf.set_fill_color(0, 0, 0)
-            pdf.cell(0, H, "", 0, 1, align="C", fill=True)
-            pdf.set_fill_color(255, 255, 255)
-
-        if obj["cover"]["useimage"] >= 0:
-            pdf.image(join(input_folder, images[obj["cover"]["useimage"]-1]), x=-10, y=0, w=0, h=H, type="JPEG")
-
-        pdf.set_y(int(obj['cover']['title']['from_top']))
-        pdf.set_font_size(int(obj['cover']['title']['size']))
-        if not obj["cover"]["title"]["black_text"]:
-            pdf.set_text_color(255, 255, 255)
-        pdf.cell(0, 0, obj['cover']['title']['string'], 0, 1, align="C", fill=False)
-        pdf.set_text_color(0, 0, 0)
-
-        pdf.set_y(int(obj['cover']['author']['from_top']))
-        pdf.set_font_size(int(obj['cover']['author']['size']))
-        if not obj["cover"]["author"]["black_text"]:
-            pdf.set_text_color(255, 255, 255)
-        pdf.cell(0, 0, obj["document"]["author"], 0, 1, align="C", fill=False)
-        pdf.set_text_color(0, 0, 0)
+        if USE_FPDF:
+            pdf.add_page()
+            if obj["cover"]["useimage"] >= 0:
+                pdf.image(join(input_folder, images[obj["cover"]["useimage"]-1]), x=-10, y=0, w=0, h=H, type="JPEG")
+            FPDFCenteredText(pdf, obj['cover']['title']['string'], 'myfont', int(obj['cover']['title']['size']),
+                             int(obj['cover']['title']['from_top']), obj["cover"]["title"]["black_text"])
+            FPDFCenteredText(pdf, obj["document"]["author"], 'myfont', int(obj['cover']['author']['size']),
+                             int(obj['cover']['author']['from_top']), obj["cover"]["author"]["black_text"])
+        if USE_RL:
+            original_image_size = PIL.Image.open(join(input_folder, images[obj["cover"]["useimage"]-1])).size
+            print(original_image_size)
+            c.drawImage(join(input_folder, images[obj["cover"]["useimage"]-1]), (WIDTH-original_image_size[0])/2, 0,
+                        width=None, height=HEIGHT, preserveAspectRatio=True)
+            RLCenteredText(c, obj['cover']['title']['string'], 'myfont', int(obj['cover']['title']['size']), HEIGHT, WIDTH,
+                           int(obj['cover']['title']['from_top'] * MM2PT), obj["cover"]["title"]["black_text"])
+            RLCenteredText(c, obj["document"]["author"], 'myfont', int(obj['cover']['author']['size']), HEIGHT, WIDTH,
+                           int(obj['cover']['author']['from_top'] * MM2PT), obj["cover"]["author"]["black_text"])
+            c.showPage()
 
     # Pagina testo
     if bool(obj['description']['show']):
@@ -178,9 +230,12 @@ def main(argv):
             pdf.cell(0, 0, obj['final']['disclaimer']['string'], 0, 1, align="C", fill=False)
 
     # Salva
-    output_filename = join(input_folder, output_filename + ".pdf")
-    pdf.output(output_filename, "F")
-    print("{:s} created ({:.1f}MB)!".format(output_filename, getsize(output_filename)/1000000.))
+    if USE_FPDF:
+        pdf.output(full_output_filename, "F")
+        print("{:s} created ({:.1f}MB)!".format(full_output_filename, getsize(full_output_filename) / 1000000.))
+    if USE_RL:
+        c.save()
+        print("{:s} created ({:.1f}MB)!".format(full_output_filename_reportlab, getsize(full_output_filename_reportlab) / 1000000.))
 
 
 if __name__ == "__main__":
