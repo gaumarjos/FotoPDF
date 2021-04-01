@@ -116,6 +116,8 @@ def RLCenteredImage(c, image, from_side, page_width, page_height):
 
 
 def main(argv):
+    #ciao = sysfont.get_font(name: string[, style = STYLE_NORMAL[, ftype = None]]) -> (str, str, int, str, str)
+
     # Default
     input_folder = "."
     output_filename = "slides"
@@ -156,15 +158,9 @@ def main(argv):
         pdf.set_author(obj["document"]["author"])
 
         # Use user-defined True Type Font (TTF)
-        if bool(obj["font"]["usemyfont"]):
-            try:
-                pdf.add_font('myfont', '', obj["font"]["myfont"], uni=True)
-                pdf.set_font('myfont', '', 16)
-            except:
-                print("Error: cannot load font.")
-                pdf.set_font(obj["font"]["family"], '', 16)
-        else:
-            pdf.set_font(obj["font"]["family"], '', 16)
+        pdf.add_font('font_title', '', obj["fonts"]["title"], uni=True)
+        pdf.add_font('font_author', '', obj["fonts"]["author"], uni=True)
+        pdf.add_font('font_text', '', obj["fonts"]["text"], uni=True)
 
     if USE_RL:
         # Constructor
@@ -176,8 +172,10 @@ def main(argv):
         c.setAuthor(obj["document"]["author"])
 
         # Use user-defined True Type Font (TTF)
-        pdfmetrics.registerFont(TTFont('myfont', obj["font"]["myfont"]))
-        c.setFont('myfont', 16)
+        pdfmetrics.registerFont(TTFont('font_title', obj["fonts"]["title"]))
+        pdfmetrics.registerFont(TTFont('font_author', obj["fonts"]["author"]))
+        pdfmetrics.registerFont(TTFont('font_text', obj["fonts"]["text"]))
+        c.setFont('font_text', 16)
 
     # Ricerca immagini
     images = [f for f in listdir(input_folder) if f.endswith(".jpg")]
@@ -197,9 +195,9 @@ def main(argv):
             original_image_size = PIL.Image.open(join(input_folder, images[obj["cover"]["useimage"] - 1])).size
             c.drawImage(join(input_folder, images[obj["cover"]["useimage"] - 1]), (W - original_image_size[0]) / 2, 0,
                         width=None, height=H, preserveAspectRatio=True)
-            RLCenteredText(c, obj['document']['title'], 'myfont', int(obj['cover']['title']['size']), H, W,
+            RLCenteredText(c, obj['document']['title'], 'font_title', int(obj['cover']['title']['size']), H, W,
                            int(obj['cover']['title']['from_top']), obj["cover"]["title"]["black_text"])
-            RLCenteredText(c, obj["document"]["author"], 'myfont', int(obj['cover']['author']['size']), H, W,
+            RLCenteredText(c, obj["document"]["author"], 'font_author', int(obj['cover']['author']['size']), H, W,
                            int(obj['cover']['author']['from_top']), obj["cover"]["author"]["black_text"])
             c.showPage()
 
@@ -216,7 +214,7 @@ def main(argv):
         if USE_RL:
             text = obj['description']['string']
             text = text.replace("\n", "<br/>")
-            RLText(c, text, 'myfont', obj['description']['size'],
+            RLText(c, text, 'font_text', obj['description']['size'],
                    obj['description']['interline'], obj['description']['from_side'],
                    obj['description']['from_top'], W, H)
             c.showPage()
@@ -236,7 +234,7 @@ def main(argv):
         for i, image in enumerate(images):
             caption = RLCenteredImage(c, join(input_folder, image), 24, W, H)
             # caption = obj['photos']['captions'][i]['caption']
-            RLText(c, caption, 'myfont', obj['photos']['size'],
+            RLText(c, caption, 'font_text', obj['photos']['size'],
                    obj['photos']['interline'], obj['photos']['from_side'],
                    690, W, H)
             c.showPage()
@@ -289,13 +287,13 @@ def main(argv):
             if USE_FPDF:
                 FPDFCenteredText(pdf,
                                  obj['document']['author'],
-                                 'myfont',
+                                 'font_text',
                                  obj['final']['author']['size'],
                                  obj['final']['author']['from_top'], black=True)
             if USE_RL:
                 RLCenteredText(c,
                                obj['document']['author'],
-                               'myfont',
+                               'font_text',
                                obj['final']['author']['size'],
                                H, W,
                                obj['final']['author']['from_top'],
@@ -305,13 +303,13 @@ def main(argv):
             if USE_FPDF:
                 FPDFCenteredText(pdf,
                                  obj['final']['website']['string'],
-                                 'myfont',
+                                 'font_text',
                                  obj['final']['website']['size'],
                                  obj['final']['website']['from_top'], black=True)
             if USE_RL:
                 RLCenteredText(c,
                                obj['final']['website']['string'],
-                               'myfont',
+                               'font_text',
                                obj['final']['website']['size'],
                                H, W,
                                obj['final']['website']['from_top'],
@@ -321,13 +319,13 @@ def main(argv):
             if USE_FPDF:
                 FPDFCenteredText(pdf,
                                  obj['final']['email']['string'],
-                                 'myfont',
+                                 'font_text',
                                  obj['final']['email']['size'],
                                  obj['final']['email']['from_top'], black=True)
             if USE_RL:
                 RLCenteredText(c,
                                obj['final']['email']['string'],
-                               'myfont',
+                               'font_text',
                                obj['final']['email']['size'],
                                H, W,
                                obj['final']['email']['from_top'],
@@ -337,13 +335,13 @@ def main(argv):
             if USE_FPDF:
                 FPDFCenteredText(pdf,
                                  obj['final']['phone']['string'],
-                                 'myfont',
+                                 'font_text',
                                  obj['final']['phone']['size'],
                                  obj['final']['phone']['from_top'], black=True)
             if USE_RL:
                 RLCenteredText(c,
                                obj['final']['phone']['string'],
-                               'myfont',
+                               'font_text',
                                obj['final']['phone']['size'],
                                H, W,
                                obj['final']['phone']['from_top'],
@@ -353,13 +351,13 @@ def main(argv):
             if USE_FPDF:
                 FPDFCenteredText(pdf,
                                  obj['final']['disclaimer']['string'],
-                                 'myfont',
+                                 'font_text',
                                  obj['final']['disclaimer']['size'],
                                  obj['final']['disclaimer']['from_top'], black=True)
             if USE_RL:
                 RLCenteredText(c,
                                obj['final']['disclaimer']['string'],
-                               'myfont',
+                               'font_text',
                                obj['final']['disclaimer']['size'],
                                H, W,
                                obj['final']['disclaimer']['from_top'],
