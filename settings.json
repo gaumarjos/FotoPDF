@@ -1,14 +1,15 @@
 {
   "document": {
-    "title": "Casari e Bergamini col turbante",
+    "title": "Casari e Bergamini<br/>col turbante",
     "author": "Stefano Salati",
     "width": 1024,
     "height": 768
   },
-  "font": {
-    "family": "Helvetica",
-    "usemyfont": 1,
-    "myfont": "miofont.ttf"
+  "fonts": {
+    "default": "Helvetica",
+    "title": "/System/Library/Fonts/Supplemental/PlantagenetCherokee.ttf",
+    "author": "font_default.ttf",
+    "text": "font_default.ttf"
   },
   "cover": {
     "show": 1,
@@ -16,7 +17,9 @@
     "black_background": 1,
     "title": {
       "size": 80,
-      "from_top": 160,
+      "from_top": 30,
+      "from_side": 100,
+      "interline": 8,
       "black_text": 0
     },
     "author": {
@@ -76,104 +79,6 @@
   "photos": {
     "size": 16,
     "from_side": 24,
-    "interline": 6,
-    "captions": [
-      {
-        "id": 1,
-        "caption": "Parmjit si sistema barba e capelli dopo il lavoro. I capelli lunghi e non tagliati, kesh, sono considerati nel sikhismo un elemento indispensabile e segno di devozione spirituale. Roncadella (RE), 2021."
-      },
-      {
-        "id": 2,
-        "caption": "Parmjit sfoglia un album di famiglia con la moglie. La foto è stata scattata in India dopo i massacri del 1984 di cui fu vittima la comunità. Aveva smesso di portare il turbante per non correre rischi e ha ricominciato a portarlo in Italia. Reggio Emilia, 2021."
-      },
-      {
-        "id": 3,
-        "caption": "La complessa operazione di indossare il turbante. Reggio Emilia, 2021."
-      },
-      {
-        "id": 4,
-        "caption": "Un libro sacro sull'altarino domestico. Questi libri vengono vestiti e trattati con cura, come fossero persone. Sulla destra ci sono 2 pugnali rituali, kirpan, uno dei cinque oggetti simboli del sikhismo. Reggio Emilia, 2021."
-      },
-      {
-        "id": 5,
-        "caption": "Preghiera domestica col resto della famiglia. Reggio Emilia, 2021."
-      },
-      {
-        "id": 6,
-        "caption": "Al lavoro. Il tubo porta il latte dalla sala di mungitura al frigo. Roncadella (RE), 2021."
-      },
-      {
-        "id": 7,
-        "caption": "Sala di mungitura. Le sbarre servono ad evitare che le vacche, entrando, cadano nella fossa dove stanno gli operatori. Roncadella (RE), 2021."
-      },
-      {
-        "id": 8,
-        "caption": "Vacche rosse reggiane in una stalla. Roncadella (RE), 2021."
-      },
-      {
-        "id": 9,
-        "caption": "Luce blu serale. Roncadella (RE), 2021."
-      },
-      {
-        "id": 10,
-        "caption": "Alimentazione di un vitello con biberon. La luce rossa proviene dalle lampade utilizzate per tenere i vitelli al caldo. Roncadella (RE), 2021."
-      },
-      {
-        "id": 11,
-        "caption": "Satnam e Pal in sala di mungitura. Prima e dopo essere attaccate al mungitore, i capezzoli vengono disinfettati (l'oggetto giallo in mano a Pal, sulla destra) e asciugati con salviette monouso e, prima che un nuovo gruppo entri in sala, il sistema viene pulito con acqua calda. Gattatico (RE), 2020."
-      },
-      {
-        "id": 12,
-        "caption": "Mungitura. Talvolta bisogna assistere l'operazione manualmente. Roncadella (RE), 2021."
-      },
-      {
-        "id": 13,
-        "caption": "Doccia al lavoro. Nelle stalle l'odore è persistente e molti scelgono di lavarsi al lavoro, due volte al giorno, per evitare di portare a casa gli odori. Roncadella (RE), 2021."
-      },
-      {
-        "id": 14,
-        "caption": "La sera, finito il lavoro. Roncadella (RE), 2021."
-      },
-      {
-        "id": 15,
-        "caption": "In inverno, in aperta campagna, non è difficile trovarsi a lavorare con temperature sotto lo zero. Gattatico (RE), 2021."
-      },
-      {
-        "id": 16,
-        "caption": "Pulitura delle corsie all'interno della stalla. Gattatico (RE), 2021."
-      },
-      {
-        "id": 17,
-        "caption": "Un nuovo gruppo viene avviato alla mungitura. Nelle stalle si usano sbarre mobili per evitare assembramenti specialmente nelle fasi di mungitura. Roncadella (RE), 2021."
-      },
-      {
-        "id": 18,
-        "caption": "Caseificio. Taljit e Mandip controllano le masse di Parmigiano Reggiano lasciate appese a scolare nelle caldaie. Ogni caldaia produce due forme da 10,5 quintali di latte. Gattatico (RE), 2020."
-      },
-      {
-        "id": 19,
-        "caption": "Taljit all'interno della sala di stagionatura. Le forme di diversa età hanno un colore differente. Vengono ora girate regolarmente da un robot, che ogni tanto ne fa cadere qualcuna. Una volta tutto questo era fatto a mano in equilibrio su scale a pioli. Gattatico (RE), 2021."
-      },
-      {
-        "id": 20,
-        "caption": "Inserimento delle masse, avvolte nella garza con la quale sono state estratte dalla caldaia, nelle fasce per dargli la forma caratteristica. Gattatico (RE), 2020."
-      },
-      {
-        "id": 21,
-        "caption": "Mungitura del mattino. Gattatico (RE), 2020."
-      },
-      {
-        "id": 22,
-        "caption": "Silo del grano. Roncadella (RE), 2021."
-      },
-      {
-        "id": 23,
-        "caption": "Gabbie dei vitelli più piccoli, riscaldate dalle lampade termiche. Roncadella (RE), 2021."
-      },
-      {
-        "id": 24,
-        "caption": "A fine giornata. Roncadella (RE), 2021."
-      }
-    ]
+    "interline": 6
   }
 }
