@@ -8,6 +8,7 @@ from os import listdir
 from os.path import join, getsize  #, isfile
 from fpdf import FPDF
 import PIL.Image
+from PIL.ExifTags import TAGS
 # import sys
 # from pdfrw import PageMerge, PdfReader, PdfWriter
 import re
@@ -81,7 +82,22 @@ def RLText(c, text, font, size, interline, from_side, from_top, page_width, page
 
 
 def RLCenteredImage(c, image, from_side, page_width, page_height):
-    original_image_size = PIL.Image.open(image).size
+    pil_image = PIL.Image.open(image)
+    original_image_size = pil_image.size
+
+    # Read EXIF ImageDescription field from JPG
+    info = pil_image.getexif()
+    try:
+        caption = info[270]
+    except:
+        caption = ""
+    # Code to read all EXIF fields
+    #exif_table = {}
+    #for tag, value in info.items():
+    #    decoded = TAGS.get(tag, tag)
+    #    exif_table[decoded] = value
+    #print(exif_table)
+
     wanted_width = page_width - from_side * 2
     ratio = wanted_width / original_image_size[0]
     wanted_height = original_image_size[1] * ratio
@@ -96,6 +112,7 @@ def RLCenteredImage(c, image, from_side, page_width, page_height):
     # im = Image(image, width=wanted_width, height=wanted_height)
     # im.hAlign = 'CENTER'
     # im.drawOn(c, from_side, page_height - from_side - wanted_height)
+    return caption
 
 
 def main(argv):
@@ -217,8 +234,9 @@ def main(argv):
 
     if USE_RL:
         for i, image in enumerate(images):
-            RLCenteredImage(c, join(input_folder, image), 24, W, H)
-            RLText(c, obj['photos']['captions'][i]['caption'], 'myfont', obj['photos']['size'],
+            caption = RLCenteredImage(c, join(input_folder, image), 24, W, H)
+            # caption = obj['photos']['captions'][i]['caption']
+            RLText(c, caption, 'myfont', obj['photos']['size'],
                    obj['photos']['interline'], obj['photos']['from_side'],
                    690, W, H)
             c.showPage()
