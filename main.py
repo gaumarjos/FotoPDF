@@ -120,6 +120,9 @@ def rl_centeredimage(c, image, from_side, from_top, page_width, page_height):
 
 
 def main(argv):
+    print(sys.argv)
+
+
     # Command line
     input_folder = str(sys.argv[1])
     if isfile(input_folder):
