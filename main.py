@@ -6,7 +6,7 @@
 # https://python-utilities.readthedocs.io/en/latest/dll.html
 
 from os import listdir
-from os.path import join, getsize, isfile, dirname, abspath # , isdir
+from os.path import join, getsize, isfile, dirname, abspath  # , isdir
 from fpdf import FPDF
 import PIL.Image
 import exifread
@@ -20,7 +20,7 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph  # , Image, Flowable
 from reportlab.lib.styles import getSampleStyleSheet  # , ParagraphStyle
 from reportlab.lib import colors
-# from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.pagesizes import A4, landscape
 import reportlab.rl_config
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -89,12 +89,12 @@ def rl_text(c, text, font, alignment, size, interline, from_side, from_top, page
     aH = page_height - from_top
     w, h = p.wrap(aW, aH)
     if w <= aW and h <= aH:
-        p.drawOn(c, from_side, page_height - from_top - h)
+        p.drawOn(c, from_side, (page_height - from_top - h) if (from_top > 0) else ((page_height - h) / 2.))
     else:
         print("Error: text cell too small for text.")
 
 
-def rl_centeredimage(c, image, from_side, page_width, page_height):
+def rl_centeredimage(c, image, from_side, from_top, page_width, page_height):
     # Read ImageDescription field from JPG. Exifread is the only library that works.
     # Exif doesn't have this tag and Pillow corrupts the accented characters.
     tags = exifread.process_file(open(image, 'rb'))
@@ -107,7 +107,7 @@ def rl_centeredimage(c, image, from_side, page_width, page_height):
     wanted_height = original_image_size[1] * ratio
     c.drawImage(image,
                 x=from_side,
-                y=page_height - from_side - wanted_height,
+                y=page_height - from_top - wanted_height,
                 width=wanted_width,
                 height=wanted_height,
                 mask=None)
@@ -116,7 +116,7 @@ def rl_centeredimage(c, image, from_side, page_width, page_height):
     # im = Image(image, width=wanted_width, height=wanted_height)
     # im.hAlign = 'CENTER'
     # im.drawOn(c, from_side, page_height - from_side - wanted_height)
-    return caption
+    return (from_top + wanted_height), caption
 
 
 def main(argv):
@@ -142,9 +142,12 @@ def main(argv):
     obj = json.loads(data)
 
     # Creazione file e impostazioni generali
-    H = obj["document"]["height"]
-    W = obj["document"]["width"]
-    print("Slide format: {:d}x{:d}pt.".format(H, W))
+    if obj["document"]["a4"]:
+        W, H = landscape(A4)
+    else:
+        H = obj["document"]["height"]
+        W = obj["document"]["width"]
+    print("Slide format: {:f}x{:f}pt.".format(H, W))
 
     output_filename = clean_html(obj['document']['title']) + ', ' + clean_html(obj['document']['author'])
     if len(obj['document']['suffix']) > 0:
@@ -190,15 +193,15 @@ def main(argv):
     if bool(obj['cover']['show']):
         if USE_FPDF:
             pdf.add_page()
-            if obj["cover"]["useimage"] >= 0:
-                pdf.image(join(input_folder, images[obj["cover"]["useimage"] - 1]), x=-10, y=0, w=0, h=H, type="JPEG")
+            if obj["cover"]["use_image"] >= 0:
+                pdf.image(join(input_folder, images[obj["cover"]["use_image"] - 1]), x=-10, y=0, w=0, h=H, type="JPEG")
             fpdf_centeredtext(pdf, obj['document']['title'], 'myfont', int(obj['cover']['title']['size']),
                               int(obj['cover']['title']['from_top']), obj["cover"]["title"]["black_text"])
             fpdf_centeredtext(pdf, obj["document"]["author"], 'myfont', int(obj['cover']['author']['size']),
                               int(obj['cover']['author']['from_top']), obj["cover"]["author"]["black_text"])
         if USE_RL:
-            original_image_size = PIL.Image.open(join(input_folder, images[obj["cover"]["useimage"] - 1])).size
-            c.drawImage(join(input_folder, images[obj["cover"]["useimage"] - 1]), (W - original_image_size[0]) / 2, 0,
+            original_image_size = PIL.Image.open(join(input_folder, images[obj["cover"]["use_image"] - 1])).size
+            c.drawImage(join(input_folder, images[obj["cover"]["use_image"] - 1]), (W - original_image_size[0]) / 2, 0,
                         width=None, height=H, preserveAspectRatio=True)
             rl_text(c, obj['document']['title'], 'font_title', 1, int(obj['cover']['title']['size']),
                     int(obj['cover']['title']['interline']), int(obj['cover']['title']['from_side']),
@@ -240,11 +243,14 @@ def main(argv):
 
     if USE_RL:
         for i, image in enumerate(images):
-            caption = rl_centeredimage(c, join(input_folder, image), 24, W, H)
-            # caption = obj['photos']['captions'][i]['caption']
+            text_x, caption = rl_centeredimage(c, join(input_folder, image),
+                                               int(obj['photos']['from_side']),
+                                               int(obj['photos']['from_top']),
+                                               W, H)
             rl_text(c, caption, 'font_text', 0, obj['photos']['size'],
                     obj['photos']['interline'], obj['photos']['from_side'],
-                    690, W, H)
+                    (text_x + obj['photos']['interline'] / 1.),
+                    W, H)
             c.showPage()
 
     # Grid
@@ -277,6 +283,9 @@ def main(argv):
                       y=(H - (R * h + (R - 1) * m_vert)) / 2 + int(i / C) * (h + m_vert),
                       w=w, h=0)
     if USE_RL:
+        if bool(obj['contactsheet']['black_background']):
+            c.setFillColorRGB(0, 0, 0)
+            c.rect(0, 0, W, H, fill=1)
         for i, image in enumerate(images):
             c.drawImage(join(input_folder, image),
                         x=(W - (C * w + (C - 1) * m_oriz)) / 2 + (i % C) * (w + m_oriz),
