@@ -1,6 +1,13 @@
 # FotoPDF
 
-Command line arguments are mandatory (unless you have everything in the same folder):
-* -i: input folder, where the images and the json are
-* -o: name of of the output pdf, no extension required
-The JSON must be placed in the same folder as the photos.
+## Usage
+As Python script:
+
+    python3 FotoPDF <folder-where-images-and-settings.json-are>
+    
+As executable:
+
+    ./FotoPDF <folder-where-images-and-settings.json-are>
+    
+## Settings (settings.json)
+This file is specific to the PDF to generate and must be placed in the same folder where the images are.
