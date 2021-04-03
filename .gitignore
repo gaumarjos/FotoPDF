@@ -1,2 +1,8 @@
 /venv/
 *.pkl
+.DS_Store
+.idea/
+__pycache__/
+build/
+dist/
+main.spec
