@@ -1,4 +1,4 @@
-# Stefano Salati 2021-03-17
+# Copyright Stefano Salati 2021
 # Untested, have fun!
 
 # Docs
@@ -6,17 +6,14 @@
 # https://python-utilities.readthedocs.io/en/latest/dll.html
 
 from os import listdir
-from os.path import join, getsize, isfile, isdir, dirname, abspath
+from os.path import join, getsize, isfile, dirname, abspath # , isdir
 from fpdf import FPDF
 import PIL.Image
-from exif import Image
-#import exif.Image
-from PIL.ExifTags import TAGS
-from unidecode import unidecode
+import exifread
 # import sys
 # from pdfrw import PageMerge, PdfReader, PdfWriter
 import re
-import getopt
+# import getopt
 import sys
 import json
 from reportlab.pdfgen import canvas
@@ -27,6 +24,7 @@ from reportlab.lib import colors
 import reportlab.rl_config
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
 # Constants
@@ -43,12 +41,12 @@ def natural_keys(text):
 
 
 def clean_html(raw_html):
-  cleanr = re.compile('<.*?>')
-  cleantext = re.sub(cleanr, '', raw_html)
-  return cleantext
+    cleanr = re.compile('<.*?>')
+    cleantext = re.sub(cleanr, '', raw_html)
+    return cleantext
 
 
-def FPDFCenteredText(p, text, font, size, y, black=True):
+def fpdf_centeredtext(p, text, font, size, y, black=True):
     p.set_y(y)
     p.set_font(font, '', size)
     if black:
@@ -59,7 +57,7 @@ def FPDFCenteredText(p, text, font, size, y, black=True):
     p.set_text_color(0, 0, 0)
 
 
-def RLSingleLineCenteredText(c, text, font, size, page_height, page_width, y, black=True):
+def rl_singlelinecenteredtext(c, text, font, size, page_height, page_width, y, black=True):
     c.setFont(font, size)
     if black:
         c.setFillColorRGB(0, 0, 0)
@@ -75,7 +73,7 @@ def RLSingleLineCenteredText(c, text, font, size, page_height, page_width, y, bl
     # c.drawText(t)
 
 
-def RLText(c, text, font, alignment, size, interline, from_side, from_top, page_width, page_height, black=True):
+def rl_text(c, text, font, alignment, size, interline, from_side, from_top, page_width, page_height, black=True):
     stylesheet = getSampleStyleSheet()
     style = stylesheet['BodyText']
     style.fontSize = size
@@ -96,47 +94,14 @@ def RLText(c, text, font, alignment, size, interline, from_side, from_top, page_
         print("Error: text cell too small for text.")
 
 
-def RLCenteredImage(c, image, from_side, page_width, page_height):
+def rl_centeredimage(c, image, from_side, page_width, page_height):
+    # Read ImageDescription field from JPG. Exifread is the only library that works.
+    # Exif doesn't have this tag and Pillow corrupts the accented characters.
+    tags = exifread.process_file(open(image, 'rb'))
+    caption = str(tags['Image ImageDescription'])
+
     pil_image = PIL.Image.open(image)
     original_image_size = pil_image.size
-
-    # Read EXIF ImageDescription field from JPG
-    exifdata = pil_image.getexif()
-    if 1:
-        try:
-            caption = exifdata[0x10e]
-            print(caption)
-        except:
-            caption = ""
-    # Code to read all EXIF fields
-    if 0:
-        exif_table = {}
-        for tag, value in info.items():
-           decoded = TAGS.get(tag, tag)
-           exif_table[decoded] = value
-        print(exif_table)
-
-    if 0:
-        for tag_id in exifdata:
-            # get the tag name, instead of human unreadable tag id
-            tag = TAGS.get(tag_id, tag_id)
-            data = exifdata.get(tag_id)
-            # decode bytes
-            if isinstance(data, bytes):
-                data = data.decode()
-            print(f"{tag:25}: {data}")
-
-    if 0:
-        with open(image, 'rb') as imgfile:
-            my_image = Image(imgfile)
-        #print(my_image.list_all())
-        print(my_image.body_serial_number)
-
-    # print(my_image.artist)          # error described below
-    #print(my_image.xp_author)  # äüÃ   as expected
-    caption = "taci"
-
-
     wanted_width = page_width - from_side * 2
     ratio = wanted_width / original_image_size[0]
     wanted_height = original_image_size[1] * ratio
@@ -155,13 +120,12 @@ def RLCenteredImage(c, image, from_side, page_width, page_height):
 
 
 def main(argv):
-    # ciao = sysfont.get_font(name: string[, style = STYLE_NORMAL[, ftype = None]]) -> (str, str, int, str, str)
-
     # Command line
     input_folder = str(sys.argv[1])
     if isfile(input_folder):
         input_folder = dirname(abspath(input_folder))
 
+    # For more arguments, now unused
     # try:
     #     opts, args = getopt.getopt(argv, "i:",
     #                                ["input_folder="])
@@ -184,12 +148,12 @@ def main(argv):
 
     output_filename = clean_html(obj['document']['title']) + ', ' + clean_html(obj['document']['author'])
     if len(obj['document']['suffix']) > 0:
-        output_filename = output_filename + ', ' + clean_html(obj['document']['suffix'])
+        output_filename = output_filename + ', ' + clean_html(obj['document']['suffix']) + ".pdf"
+    abs_output_filename = join(input_folder, output_filename)
 
     if USE_FPDF:
         # Constructor
         print("Generating PDF with FPDF...")
-        full_output_filename = join(input_folder, output_filename + ".pdf")
         pdf = FPDF(orientation='L', unit='pt', format=(H, W))
         pdf.set_compression(True)
         pdf.set_margins(0, 0, 0)
@@ -207,8 +171,7 @@ def main(argv):
     if USE_RL:
         # Constructor
         print("Generating PDF with Reportlab...")
-        full_output_filename = join(input_folder, output_filename + ".pdf")
-        c = canvas.Canvas(full_output_filename, enforceColorSpace='RGB')
+        c = canvas.Canvas(abs_output_filename, enforceColorSpace='RGB')
         c.setPageSize((W, H))
         c.setTitle(obj["document"]["title"])
         c.setAuthor(obj["document"]["author"])
@@ -229,20 +192,21 @@ def main(argv):
             pdf.add_page()
             if obj["cover"]["useimage"] >= 0:
                 pdf.image(join(input_folder, images[obj["cover"]["useimage"] - 1]), x=-10, y=0, w=0, h=H, type="JPEG")
-            FPDFCenteredText(pdf, obj['document']['title'], 'myfont', int(obj['cover']['title']['size']),
-                             int(obj['cover']['title']['from_top']), obj["cover"]["title"]["black_text"])
-            FPDFCenteredText(pdf, obj["document"]["author"], 'myfont', int(obj['cover']['author']['size']),
-                             int(obj['cover']['author']['from_top']), obj["cover"]["author"]["black_text"])
+            fpdf_centeredtext(pdf, obj['document']['title'], 'myfont', int(obj['cover']['title']['size']),
+                              int(obj['cover']['title']['from_top']), obj["cover"]["title"]["black_text"])
+            fpdf_centeredtext(pdf, obj["document"]["author"], 'myfont', int(obj['cover']['author']['size']),
+                              int(obj['cover']['author']['from_top']), obj["cover"]["author"]["black_text"])
         if USE_RL:
             original_image_size = PIL.Image.open(join(input_folder, images[obj["cover"]["useimage"] - 1])).size
             c.drawImage(join(input_folder, images[obj["cover"]["useimage"] - 1]), (W - original_image_size[0]) / 2, 0,
                         width=None, height=H, preserveAspectRatio=True)
-            RLText(c, obj['document']['title'], 'font_title', 1, int(obj['cover']['title']['size']),
-                   int(obj['cover']['title']['interline']), int(obj['cover']['title']['from_side']), int(obj['cover']['title']['from_top']), W, H,
-                   black=obj["cover"]["title"]["black_text"])
-            RLSingleLineCenteredText(c, obj["document"]["author"], 'font_author', int(obj['cover']['author']['size']),
-                                     H, W,
-                                     int(obj['cover']['author']['from_top']), obj["cover"]["author"]["black_text"])
+            rl_text(c, obj['document']['title'], 'font_title', 1, int(obj['cover']['title']['size']),
+                    int(obj['cover']['title']['interline']), int(obj['cover']['title']['from_side']),
+                    int(obj['cover']['title']['from_top']), W, H,
+                    black=obj["cover"]["title"]["black_text"])
+            rl_singlelinecenteredtext(c, obj["document"]["author"], 'font_author', int(obj['cover']['author']['size']),
+                                      H, W,
+                                      int(obj['cover']['author']['from_top']), obj["cover"]["author"]["black_text"])
             c.showPage()
 
     # Text page
@@ -258,9 +222,9 @@ def main(argv):
         if USE_RL:
             text = obj['description']['string']
             text = text.replace("\n", "<br/>")
-            RLText(c, text, 'font_text', 0, obj['description']['size'],
-                   obj['description']['interline'], obj['description']['from_side'],
-                   obj['description']['from_top'], W, H)
+            rl_text(c, text, 'font_text', 0, obj['description']['size'],
+                    obj['description']['interline'], obj['description']['from_side'],
+                    obj['description']['from_top'], W, H)
             c.showPage()
 
     # Full-page images
@@ -276,11 +240,11 @@ def main(argv):
 
     if USE_RL:
         for i, image in enumerate(images):
-            caption = RLCenteredImage(c, join(input_folder, image), 24, W, H)
+            caption = rl_centeredimage(c, join(input_folder, image), 24, W, H)
             # caption = obj['photos']['captions'][i]['caption']
-            RLText(c, caption, 'font_text', 0, obj['photos']['size'],
-                   obj['photos']['interline'], obj['photos']['from_side'],
-                   690, W, H)
+            rl_text(c, caption, 'font_text', 0, obj['photos']['size'],
+                    obj['photos']['interline'], obj['photos']['from_side'],
+                    690, W, H)
             c.showPage()
 
     # Grid
@@ -329,93 +293,93 @@ def main(argv):
 
         if bool(obj['final']['author']['show']):
             if USE_FPDF:
-                FPDFCenteredText(pdf,
-                                 obj['document']['author'],
-                                 'font_text',
-                                 obj['final']['author']['size'],
-                                 obj['final']['author']['from_top'], black=True)
+                fpdf_centeredtext(pdf,
+                                  obj['document']['author'],
+                                  'font_text',
+                                  obj['final']['author']['size'],
+                                  obj['final']['author']['from_top'], black=True)
             if USE_RL:
-                RLSingleLineCenteredText(c,
-                                         obj['document']['author'],
-                                         'font_text',
-                                         obj['final']['author']['size'],
-                                         H, W,
-                                         obj['final']['author']['from_top'],
-                                         True)
+                rl_singlelinecenteredtext(c,
+                                          obj['document']['author'],
+                                          'font_text',
+                                          obj['final']['author']['size'],
+                                          H, W,
+                                          obj['final']['author']['from_top'],
+                                          True)
 
         if bool(obj['final']['website']['show']):
             if USE_FPDF:
-                FPDFCenteredText(pdf,
-                                 obj['final']['website']['string'],
-                                 'font_text',
-                                 obj['final']['website']['size'],
-                                 obj['final']['website']['from_top'], black=True)
+                fpdf_centeredtext(pdf,
+                                  obj['final']['website']['string'],
+                                  'font_text',
+                                  obj['final']['website']['size'],
+                                  obj['final']['website']['from_top'], black=True)
             if USE_RL:
-                RLSingleLineCenteredText(c,
-                                         obj['final']['website']['string'],
-                                         'font_text',
-                                         obj['final']['website']['size'],
-                                         H, W,
-                                         obj['final']['website']['from_top'],
-                                         True)
+                rl_singlelinecenteredtext(c,
+                                          obj['final']['website']['string'],
+                                          'font_text',
+                                          obj['final']['website']['size'],
+                                          H, W,
+                                          obj['final']['website']['from_top'],
+                                          True)
 
         if bool(obj['final']['email']['show']):
             if USE_FPDF:
-                FPDFCenteredText(pdf,
-                                 obj['final']['email']['string'],
-                                 'font_text',
-                                 obj['final']['email']['size'],
-                                 obj['final']['email']['from_top'], black=True)
+                fpdf_centeredtext(pdf,
+                                  obj['final']['email']['string'],
+                                  'font_text',
+                                  obj['final']['email']['size'],
+                                  obj['final']['email']['from_top'], black=True)
             if USE_RL:
-                RLSingleLineCenteredText(c,
-                                         obj['final']['email']['string'],
-                                         'font_text',
-                                         obj['final']['email']['size'],
-                                         H, W,
-                                         obj['final']['email']['from_top'],
-                                         True)
+                rl_singlelinecenteredtext(c,
+                                          obj['final']['email']['string'],
+                                          'font_text',
+                                          obj['final']['email']['size'],
+                                          H, W,
+                                          obj['final']['email']['from_top'],
+                                          True)
 
         if bool(obj['final']['phone']['show']):
             if USE_FPDF:
-                FPDFCenteredText(pdf,
-                                 obj['final']['phone']['string'],
-                                 'font_text',
-                                 obj['final']['phone']['size'],
-                                 obj['final']['phone']['from_top'], black=True)
+                fpdf_centeredtext(pdf,
+                                  obj['final']['phone']['string'],
+                                  'font_text',
+                                  obj['final']['phone']['size'],
+                                  obj['final']['phone']['from_top'], black=True)
             if USE_RL:
-                RLSingleLineCenteredText(c,
-                                         obj['final']['phone']['string'],
-                                         'font_text',
-                                         obj['final']['phone']['size'],
-                                         H, W,
-                                         obj['final']['phone']['from_top'],
-                                         True)
+                rl_singlelinecenteredtext(c,
+                                          obj['final']['phone']['string'],
+                                          'font_text',
+                                          obj['final']['phone']['size'],
+                                          H, W,
+                                          obj['final']['phone']['from_top'],
+                                          True)
 
         if bool(obj['final']['phone']['show']):
             if USE_FPDF:
-                FPDFCenteredText(pdf,
-                                 obj['final']['disclaimer']['string'],
-                                 'font_text',
-                                 obj['final']['disclaimer']['size'],
-                                 obj['final']['disclaimer']['from_top'], black=True)
+                fpdf_centeredtext(pdf,
+                                  obj['final']['disclaimer']['string'],
+                                  'font_text',
+                                  obj['final']['disclaimer']['size'],
+                                  obj['final']['disclaimer']['from_top'], black=True)
             if USE_RL:
-                RLSingleLineCenteredText(c,
-                                         obj['final']['disclaimer']['string'],
-                                         'font_text',
-                                         obj['final']['disclaimer']['size'],
-                                         H, W,
-                                         obj['final']['disclaimer']['from_top'],
-                                         True)
+                rl_singlelinecenteredtext(c,
+                                          obj['final']['disclaimer']['string'],
+                                          'font_text',
+                                          obj['final']['disclaimer']['size'],
+                                          H, W,
+                                          obj['final']['disclaimer']['from_top'],
+                                          True)
 
         if USE_RL:
             c.showPage()
 
     # Salva
     if USE_FPDF:
-        pdf.output(full_output_filename, "F")
+        pdf.output(abs_output_filename, "F")
     if USE_RL:
         c.save()
-    print("{:s} created ({:.1f}MB)!".format(full_output_filename, getsize(full_output_filename) / 1000000.))
+    print("{:s} created ({:.1f}MB)!".format(abs_output_filename, getsize(abs_output_filename) / 1000000.))
 
 
 if __name__ == "__main__":
