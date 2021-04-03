@@ -6,7 +6,7 @@
 # https://python-utilities.readthedocs.io/en/latest/dll.html
 
 from os import listdir
-from os.path import join, getsize  # , isfile
+from os.path import join, getsize, isfile, isdir, dirname, abspath
 from fpdf import FPDF
 import PIL.Image
 from exif import Image
@@ -159,6 +159,9 @@ def main(argv):
 
     # Command line
     input_folder = str(sys.argv[1])
+    if isfile(input_folder):
+        input_folder = dirname(abspath(input_folder))
+
     # try:
     #     opts, args = getopt.getopt(argv, "i:",
     #                                ["input_folder="])
@@ -170,7 +173,7 @@ def main(argv):
     #         input_folder = arg
 
     # Lettura JSON
-    with open(input_folder + 'settings.json', 'r') as myjson:
+    with open(join(input_folder, 'settings.json'), 'r') as myjson:
         data = myjson.read()
     obj = json.loads(data)
 
