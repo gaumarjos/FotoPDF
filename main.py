@@ -9,7 +9,10 @@ from os import listdir
 from os.path import join, getsize  # , isfile
 from fpdf import FPDF
 import PIL.Image
+from exif import Image
+#import exif.Image
 from PIL.ExifTags import TAGS
+from unidecode import unidecode
 # import sys
 # from pdfrw import PageMerge, PdfReader, PdfWriter
 import re
@@ -37,6 +40,12 @@ def atoi(text):
 
 def natural_keys(text):
     return [atoi(c) for c in re.split(r'(\d+)', text)]
+
+
+def clean_html(raw_html):
+  cleanr = re.compile('<.*?>')
+  cleantext = re.sub(cleanr, '', raw_html)
+  return cleantext
 
 
 def FPDFCenteredText(p, text, font, size, y, black=True):
@@ -92,17 +101,41 @@ def RLCenteredImage(c, image, from_side, page_width, page_height):
     original_image_size = pil_image.size
 
     # Read EXIF ImageDescription field from JPG
-    info = pil_image.getexif()
-    try:
-        caption = info[270]
-    except:
-        caption = ""
+    exifdata = pil_image.getexif()
+    if 1:
+        try:
+            caption = exifdata[0x10e]
+            print(caption)
+        except:
+            caption = ""
     # Code to read all EXIF fields
-    # exif_table = {}
-    # for tag, value in info.items():
-    #    decoded = TAGS.get(tag, tag)
-    #    exif_table[decoded] = value
-    # print(exif_table)
+    if 0:
+        exif_table = {}
+        for tag, value in info.items():
+           decoded = TAGS.get(tag, tag)
+           exif_table[decoded] = value
+        print(exif_table)
+
+    if 0:
+        for tag_id in exifdata:
+            # get the tag name, instead of human unreadable tag id
+            tag = TAGS.get(tag_id, tag_id)
+            data = exifdata.get(tag_id)
+            # decode bytes
+            if isinstance(data, bytes):
+                data = data.decode()
+            print(f"{tag:25}: {data}")
+
+    if 0:
+        with open(image, 'rb') as imgfile:
+            my_image = Image(imgfile)
+        #print(my_image.list_all())
+        print(my_image.body_serial_number)
+
+    # print(my_image.artist)          # error described below
+    #print(my_image.xp_author)  # äüÃ   as expected
+    caption = "taci"
+
 
     wanted_width = page_width - from_side * 2
     ratio = wanted_width / original_image_size[0]
@@ -124,32 +157,32 @@ def RLCenteredImage(c, image, from_side, page_width, page_height):
 def main(argv):
     # ciao = sysfont.get_font(name: string[, style = STYLE_NORMAL[, ftype = None]]) -> (str, str, int, str, str)
 
-    # Default
-    input_folder = "."
-    output_filename = "slides"
-
     # Command line
-    try:
-        opts, args = getopt.getopt(argv, "i:o:",
-                                   ["input_folder=", "output_filename="])
-    except getopt.GetoptError:
-        print("Error: wrong arguments.")
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt in ("-i", "--input_folder"):
-            input_folder = arg
-        elif opt in ("-o", "--output_filename"):
-            output_filename = arg
+    input_folder = str(sys.argv[1])
+    # try:
+    #     opts, args = getopt.getopt(argv, "i:",
+    #                                ["input_folder="])
+    # except getopt.GetoptError:
+    #     print("Error: wrong arguments.")
+    #     sys.exit(2)
+    # for opt, arg in opts:
+    #     if opt in ("-i", "--input_folder"):
+    #         input_folder = arg
 
     # Lettura JSON
     with open(input_folder + 'settings.json', 'r') as myjson:
         data = myjson.read()
     obj = json.loads(data)
+
+    # Creazione file e impostazioni generali
     H = obj["document"]["height"]
     W = obj["document"]["width"]
     print("Slide format: {:d}x{:d}pt.".format(H, W))
 
-    # Creazione file e impostazioni generali
+    output_filename = clean_html(obj['document']['title']) + ', ' + clean_html(obj['document']['author'])
+    if len(obj['document']['suffix']) > 0:
+        output_filename = output_filename + ', ' + clean_html(obj['document']['suffix'])
+
     if USE_FPDF:
         # Constructor
         print("Generating PDF with FPDF...")
@@ -171,8 +204,8 @@ def main(argv):
     if USE_RL:
         # Constructor
         print("Generating PDF with Reportlab...")
-        full_output_filename_reportlab = join(input_folder, output_filename + "_reportlab.pdf")
-        c = canvas.Canvas(full_output_filename_reportlab, enforceColorSpace='RGB')
+        full_output_filename = join(input_folder, output_filename + ".pdf")
+        c = canvas.Canvas(full_output_filename, enforceColorSpace='RGB')
         c.setPageSize((W, H))
         c.setTitle(obj["document"]["title"])
         c.setAuthor(obj["document"]["author"])
@@ -377,11 +410,9 @@ def main(argv):
     # Salva
     if USE_FPDF:
         pdf.output(full_output_filename, "F")
-        print("{:s} created ({:.1f}MB)!".format(full_output_filename, getsize(full_output_filename) / 1000000.))
     if USE_RL:
         c.save()
-        print("{:s} created ({:.1f}MB)!".format(full_output_filename_reportlab,
-                                                getsize(full_output_filename_reportlab) / 1000000.))
+    print("{:s} created ({:.1f}MB)!".format(full_output_filename, getsize(full_output_filename) / 1000000.))
 
 
 if __name__ == "__main__":
