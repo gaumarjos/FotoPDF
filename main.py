@@ -4,9 +4,11 @@
 # Docs
 # https://www.reportlab.com/docs/reportlab-userguide.pdf
 # https://python-utilities.readthedocs.io/en/latest/dll.html
+# https://www.techwithtim.net/tutorials/pyqt5-tutorial/basic-gui-application/
+# https://www.reddit.com/r/learnpython/comments/97z5dq/pyqt5_drag_and_drop_file_option/
 
 from os import listdir
-from os.path import join, getsize, isfile, dirname, abspath  # , isdir
+from os.path import join, getsize, isfile, dirname, abspath, isdir
 from fpdf import FPDF
 import PIL.Image
 import exifread
@@ -24,10 +26,14 @@ from reportlab.lib.pagesizes import A4, landscape
 import reportlab.rl_config
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit # QLabel, QMessageBox, QLineEdit
+#from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
 # Constants
+GUI = True
 USE_FPDF = False
 USE_RL = True
 
@@ -119,25 +125,14 @@ def rl_centeredimage(c, image, from_side, from_top, page_width, page_height):
     return (from_top + wanted_height), caption
 
 
-def main(argv):
-    print(sys.argv)
+def create_pdf(input_folder, widget=None):
+    # If used as command line (GUI = False), the input folder is sys.argv[1]
+    if widget is None:
+        input_folder = str(input_folder[0])
 
-
-    # Command line
-    input_folder = str(sys.argv[1])
+    # If it's a file instead of a folder, just take the folder containing the file
     if isfile(input_folder):
         input_folder = dirname(abspath(input_folder))
-
-    # For more arguments, now unused
-    # try:
-    #     opts, args = getopt.getopt(argv, "i:",
-    #                                ["input_folder="])
-    # except getopt.GetoptError:
-    #     print("Error: wrong arguments.")
-    #     sys.exit(2)
-    # for opt, arg in opts:
-    #     if opt in ("-i", "--input_folder"):
-    #         input_folder = arg
 
     # Lettura JSON
     with open(join(input_folder, 'settings.json'), 'r') as myjson:
@@ -150,7 +145,11 @@ def main(argv):
     else:
         H = obj["document"]["height"]
         W = obj["document"]["width"]
-    print("Slide format: {:f}x{:f}pt.".format(H, W))
+    if widget is None:
+        print("Slide format: {:f}x{:f}pt.".format(H, W))
+    else:
+        widget.append("Slide format: {:f}x{:f}pt.".format(H, W))
+
 
     output_filename = clean_html(obj['document']['title']) + ', ' + clean_html(obj['document']['author'])
     if len(obj['document']['suffix']) > 0:
@@ -159,7 +158,10 @@ def main(argv):
 
     if USE_FPDF:
         # Constructor
-        print("Generating PDF with FPDF...")
+        if widget is None:
+            print("Generating PDF with FPDF...")
+        else:
+            widget.append("Generating PDF with FPDF...")
         pdf = FPDF(orientation='L', unit='pt', format=(H, W))
         pdf.set_compression(True)
         pdf.set_margins(0, 0, 0)
@@ -176,7 +178,10 @@ def main(argv):
 
     if USE_RL:
         # Constructor
-        print("Generating PDF with Reportlab...")
+        if widget is None:
+            print("Generating PDF with Reportlab...")
+        else:
+            widget.append("Generating PDF with Reportlab...")
         c = canvas.Canvas(abs_output_filename, enforceColorSpace='RGB')
         c.setPageSize((W, H))
         c.setTitle(obj["document"]["title"])
@@ -391,12 +396,70 @@ def main(argv):
         pdf.output(abs_output_filename, "F")
     if USE_RL:
         c.save()
-    print("{:s} created ({:.1f}MB)!".format(abs_output_filename, getsize(abs_output_filename) / 1000000.))
+    if widget is None:
+        print("{:s} created ({:.1f}MB)!".format(abs_output_filename, getsize(abs_output_filename) / 1000000.))
+    else:
+        widget.append("{:s} created ({:.1f}MB)!".format(abs_output_filename, getsize(abs_output_filename) / 1000000.))
+
+
+class FileEdit(QTextEdit):
+    def __init__(self, parent):
+        super(FileEdit, self).__init__(parent)
+        # Si usa solo nel caso del QLineEdit
+        # self.setDragEnabled(True)
+
+    def dragEnterEvent(self, event):
+        data = event.mimeData()
+        urls = data.urls()
+        if urls and urls[0].scheme() == 'file':
+            event.acceptProposedAction()
+
+    def dragMoveEvent(self, event):
+        data = event.mimeData()
+        urls = data.urls()
+        if urls and urls[0].scheme() == 'file':
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        data = event.mimeData()
+        urls = data.urls()
+        if urls and urls[0].scheme() == 'file':
+            draggedpath = str(urls[0].path())
+            if isfile(draggedpath) or isdir(draggedpath):
+                # if filepath[-4:].lower() == ".jpg":
+                self.setText(draggedpath)
+                create_pdf(draggedpath, self)
+            else:
+                self.setText("Invalid file or folder.")
+
+
+def main_gui(argv):
+    app = QApplication(sys.argv)
+    win = QMainWindow()
+    win.setGeometry(200, 200, 400, 200)
+    win.setWindowTitle("FotoPDF")
+    app.setWindowIcon(QIcon('FotoPDF.png'))
+
+    # Create widget to accept drag&drop
+    widget = FileEdit(win)
+    widget.setReadOnly(True)
+    widget.setText("Drag folder or one of the images here")
+    widget.setGeometry(0, 0, 400, 200)
+    #widget.setAlignment(Qt.AlignHCenter)
+    #widget.setAlignment(Qt.AlignVCenter)
+
+    win.show()
+    sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    if GUI:
+        main_gui(sys.argv[1:])
+    else:
+        create_pdf(sys.argv[1:], None)
 
+
+# Unused code
 # if C == -1 or R == -1:
 #     print("Calcolo miglior disposizione griglia...")
 #     N = len(images)
@@ -429,3 +492,15 @@ if __name__ == "__main__":
 #     for i in range(len(ciao.pages)):
 #         y.addpage(ciao.pages[i])
 #     y.write('result.pdf')
+
+
+# For more arguments, now unused
+    # try:
+    #     opts, args = getopt.getopt(argv, "i:",
+    #                                ["input_folder="])
+    # except getopt.GetoptError:
+    #     print("Error: wrong arguments.")
+    #     sys.exit(2)
+    # for opt, arg in opts:
+    #     if opt in ("-i", "--input_folder"):
+    #         input_folder = arg
