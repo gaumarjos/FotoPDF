@@ -435,7 +435,7 @@ class FileEdit(QTextEdit):
             draggedpath = str(urls[0].path())
             if isfile(draggedpath) or isdir(draggedpath):
                 # if filepath[-4:].lower() == ".jpg":
-                #self.setText(draggedpath)
+                # self.setText(draggedpath)
                 mypdf = FotoPDF(draggedpath, self)
                 mypdf.create_pdf()
                 # create_pdf(draggedpath, self)
