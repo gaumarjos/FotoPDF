@@ -1,5 +1,4 @@
 # Copyright Stefano Salati 2021
-# Untested, have fun!
 
 # Docs
 # https://www.reportlab.com/docs/reportlab-userguide.pdf
@@ -140,6 +139,11 @@ class FotoPDF:
         if isfile(self.input_folder):
             self.input_folder = dirname(abspath(self.input_folder))
 
+        if self.widget is None:
+            print("Creating PDF with images in {}".format(self.input_folder))
+        else:
+            self.widget.setText("Creating PDF with images in {}".format(self.input_folder))
+
         # Lettura JSON
         with open(join(self.input_folder, 'settings.json'), 'r') as myjson:
             data = myjson.read()
@@ -151,10 +155,10 @@ class FotoPDF:
         else:
             self.H = self.obj["document"]["height"]
             self.W = self.obj["document"]["width"]
-        if self.widget is None:
-            print("Slide format: {:f}x{:f}pt.".format(self.H, self.W))
-        else:
-            self.widget.append("Slide format: {:f}x{:f}pt.".format(self.H, self.W))
+        # if self.widget is None:
+        #     print("Slide format: {:f}x{:f}pt.".format(self.H, self.W))
+        # else:
+        #     self.widget.append("Slide format: {:f}x{:f}pt.".format(self.H, self.W))
 
         output_filename = clean_html(self.obj['document']['title']) + ', ' + clean_html(self.obj['document']['author'])
         if len(self.obj['document']['suffix']) > 0:
@@ -163,10 +167,6 @@ class FotoPDF:
 
         if USE_FPDF:
             # Constructor
-            if widget is None:
-                print("Generating PDF with FPDF...")
-            else:
-                widget.append("Generating PDF with FPDF...")
             self.pdf = FPDF(orientation='L', unit='pt', format=(self.H, self.W))
             self.pdf.set_compression(True)
             self.pdf.set_margins(0, 0, 0)
@@ -183,10 +183,6 @@ class FotoPDF:
 
         if USE_RL:
             # Constructor
-            if self.widget is None:
-                print("Generating PDF with Reportlab...")
-            else:
-                self.widget.append("Generating PDF with Reportlab...")
             self.c = canvas.Canvas(self.abs_output_filename, enforceColorSpace='RGB')
             self.c.setPageSize((self.W, self.H))
             self.c.setTitle(self.obj["document"]["title"])
@@ -203,61 +199,57 @@ class FotoPDF:
         self.images.sort(key=natural_keys)
 
     def cover_page(self):
-        # Cover page
-        if bool(self.obj['cover']['show']):
-            if USE_FPDF:
-                self.pdf.add_page()
-                if self.obj["cover"]["use_image"] >= 0:
-                    self.pdf.image(join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1]), x=-10, y=0,
-                                   w=0,
-                                   h=self.H,
-                                   type="JPEG")
-                self.fpdf_centered_text(self.obj['document']['title'], 'myfont',
-                                        int(self.obj['cover']['title']['size']),
-                                        int(self.obj['cover']['title']['from_top']),
-                                        self.obj["cover"]["title"]["black_text"])
-                self.fpdf_centered_text(self.obj["document"]["author"], 'myfont',
-                                        int(self.obj['cover']['author']['size']),
-                                        int(self.obj['cover']['author']['from_top']),
-                                        self.obj["cover"]["author"]["black_text"])
-            if USE_RL:
-                original_image_size = PIL.Image.open(
-                    join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1])).size
-                self.c.drawImage(join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1]),
-                                 (self.W - original_image_size[0]) / 2,
-                                 0,
-                                 width=None, height=self.H, preserveAspectRatio=True)
-                self.rl_text(self.obj['document']['title'], 'font_title', 1, int(self.obj['cover']['title']['size']),
-                             int(self.obj['cover']['title']['interline']), int(self.obj['cover']['title']['from_side']),
-                             int(self.obj['cover']['title']['from_top']),
-                             black=self.obj["cover"]["title"]["black_text"])
-                self.rl_single_line_centered_text(self.obj["document"]["author"], 'font_author',
-                                                  int(self.obj['cover']['author']['size']),
-                                                  int(self.obj['cover']['author']['from_top']),
-                                                  self.obj["cover"]["author"]["black_text"])
-                self.c.showPage()
+        if USE_FPDF:
+            self.pdf.add_page()
+            if self.obj["cover"]["use_image"] >= 0:
+                self.pdf.image(join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1]), x=-10, y=0,
+                               w=0,
+                               h=self.H,
+                               type="JPEG")
+            self.fpdf_centered_text(self.obj['document']['title'], 'myfont',
+                                    int(self.obj['cover']['title']['size']),
+                                    int(self.obj['cover']['title']['from_top']),
+                                    self.obj["cover"]["title"]["black_text"])
+            self.fpdf_centered_text(self.obj["document"]["author"], 'myfont',
+                                    int(self.obj['cover']['author']['size']),
+                                    int(self.obj['cover']['author']['from_top']),
+                                    self.obj["cover"]["author"]["black_text"])
+        if USE_RL:
+            original_image_size = PIL.Image.open(
+                join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1])).size
+            self.c.drawImage(join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1]),
+                             (self.W - original_image_size[0]) / 2,
+                             0,
+                             width=None, height=self.H, preserveAspectRatio=True)
+            self.rl_text(self.obj['document']['title'], 'font_title', 1, int(self.obj['cover']['title']['size']),
+                         int(self.obj['cover']['title']['interline']), int(self.obj['cover']['title']['from_side']),
+                         int(self.obj['cover']['title']['from_top']),
+                         black=self.obj["cover"]["title"]["black_text"])
+            self.rl_single_line_centered_text(self.obj["document"]["author"], 'font_author',
+                                              int(self.obj['cover']['author']['size']),
+                                              int(self.obj['cover']['author']['from_top']),
+                                              self.obj["cover"]["author"]["black_text"])
+            self.c.showPage()
 
     def description_page(self):
-        if bool(self.obj['description']['show']):
-            if USE_FPDF:
-                self.pdf.add_page()
-                self.pdf.set_y(int(self.obj['description']['from_top']))
-                self.pdf.set_x(int(self.obj['description']['from_side']))
-                self.pdf.set_font_size(int(self.obj['description']['size']))
-                self.pdf.multi_cell(w=self.W - int(self.obj['description']['from_side']) * 2,
-                                    h=int(self.obj['description']['interline']),
-                                    txt=self.obj['description']['string'], border=0, align="L", fill=False)
+        if USE_FPDF:
+            self.pdf.add_page()
+            self.pdf.set_y(int(self.obj['description']['from_top']))
+            self.pdf.set_x(int(self.obj['description']['from_side']))
+            self.pdf.set_font_size(int(self.obj['description']['size']))
+            self.pdf.multi_cell(w=self.W - int(self.obj['description']['from_side']) * 2,
+                                h=int(self.obj['description']['interline']),
+                                txt=self.obj['description']['string'], border=0, align="L", fill=False)
 
-            if USE_RL:
-                text = self.obj['description']['string']
-                text = text.replace("\n", "<br/>")
-                self.rl_text(text, 'font_text', 0, self.obj['description']['size'],
-                             self.obj['description']['interline'], self.obj['description']['from_side'],
-                             self.obj['description']['from_top'])
-                self.c.showPage()
+        if USE_RL:
+            text = self.obj['description']['string']
+            text = text.replace("\n", "<br/>")
+            self.rl_text(text, 'font_text', 0, self.obj['description']['size'],
+                         self.obj['description']['interline'], self.obj['description']['from_side'],
+                         self.obj['description']['from_top'])
+            self.c.showPage()
 
     def image_pages(self):
-        # Full-page images
         if USE_FPDF:
             self.pdf.set_font_size(int(self.obj['photos']['size']))
             for i, image in enumerate(self.images):
@@ -281,7 +273,6 @@ class FotoPDF:
                 self.c.showPage()
 
     def grid_page(self):
-        # Grid
         r = int(self.obj['contactsheet']['rows'])
         c = int(self.obj['contactsheet']['columns'])
         m_oriz = self.obj["contactsheet"]["horizontal_margin"]
@@ -324,78 +315,76 @@ class FotoPDF:
             self.c.showPage()
 
     def final_page(self):
-        # Pagina finale
-        if self.obj['final']['show']:
+        if USE_FPDF:
+            self.pdf.add_page()
+
+        if bool(self.obj['final']['author']['show']):
             if USE_FPDF:
-                self.pdf.add_page()
-
-            if bool(self.obj['final']['author']['show']):
-                if USE_FPDF:
-                    self.fpdf_centered_text(self.obj['document']['author'],
-                                            'font_text',
-                                            self.obj['final']['author']['size'],
-                                            self.obj['final']['author']['from_top'], black=True)
-                if USE_RL:
-                    self.rl_single_line_centered_text(self.obj['document']['author'],
-                                                      'font_text',
-                                                      self.obj['final']['author']['size'],
-                                                      self.obj['final']['author']['from_top'],
-                                                      True)
-
-            if bool(self.obj['final']['website']['show']):
-                if USE_FPDF:
-                    self.fpdf_centered_text(self.obj['final']['website']['string'],
-                                            'font_text',
-                                            self.obj['final']['website']['size'],
-                                            self.obj['final']['website']['from_top'], black=True)
-                if USE_RL:
-                    self.rl_single_line_centered_text(self.obj['final']['website']['string'],
-                                                      'font_text',
-                                                      self.obj['final']['website']['size'],
-                                                      self.obj['final']['website']['from_top'],
-                                                      True)
-
-            if bool(self.obj['final']['email']['show']):
-                if USE_FPDF:
-                    self.fpdf_centered_text(self.obj['final']['email']['string'],
-                                            'font_text',
-                                            self.obj['final']['email']['size'],
-                                            self.obj['final']['email']['from_top'], black=True)
-                if USE_RL:
-                    self.rl_single_line_centered_text(self.obj['final']['email']['string'],
-                                                      'font_text',
-                                                      self.obj['final']['email']['size'],
-                                                      self.obj['final']['email']['from_top'],
-                                                      True)
-
-            if bool(self.obj['final']['phone']['show']):
-                if USE_FPDF:
-                    self.fpdf_centered_text(self.obj['final']['phone']['string'],
-                                            'font_text',
-                                            self.obj['final']['phone']['size'],
-                                            self.obj['final']['phone']['from_top'], black=True)
-                if USE_RL:
-                    self.rl_single_line_centered_text(self.obj['final']['phone']['string'],
-                                                      'font_text',
-                                                      self.obj['final']['phone']['size'],
-                                                      self.obj['final']['phone']['from_top'],
-                                                      True)
-
-            if bool(self.obj['final']['disclaimer']['show']):
-                if USE_FPDF:
-                    self.fpdf_centered_text(self.obj['final']['disclaimer']['string'],
-                                            'font_text',
-                                            self.obj['final']['disclaimer']['size'],
-                                            self.obj['final']['disclaimer']['from_top'], black=True)
-                if USE_RL:
-                    self.rl_single_line_centered_text(self.obj['final']['disclaimer']['string'],
-                                                      'font_text',
-                                                      self.obj['final']['disclaimer']['size'],
-                                                      self.obj['final']['disclaimer']['from_top'],
-                                                      True)
-
+                self.fpdf_centered_text(self.obj['document']['author'],
+                                        'font_text',
+                                        self.obj['final']['author']['size'],
+                                        self.obj['final']['author']['from_top'], black=True)
             if USE_RL:
-                self.c.showPage()
+                self.rl_single_line_centered_text(self.obj['document']['author'],
+                                                  'font_text',
+                                                  self.obj['final']['author']['size'],
+                                                  self.obj['final']['author']['from_top'],
+                                                  True)
+
+        if bool(self.obj['final']['website']['show']):
+            if USE_FPDF:
+                self.fpdf_centered_text(self.obj['final']['website']['string'],
+                                        'font_text',
+                                        self.obj['final']['website']['size'],
+                                        self.obj['final']['website']['from_top'], black=True)
+            if USE_RL:
+                self.rl_single_line_centered_text(self.obj['final']['website']['string'],
+                                                  'font_text',
+                                                  self.obj['final']['website']['size'],
+                                                  self.obj['final']['website']['from_top'],
+                                                  True)
+
+        if bool(self.obj['final']['email']['show']):
+            if USE_FPDF:
+                self.fpdf_centered_text(self.obj['final']['email']['string'],
+                                        'font_text',
+                                        self.obj['final']['email']['size'],
+                                        self.obj['final']['email']['from_top'], black=True)
+            if USE_RL:
+                self.rl_single_line_centered_text(self.obj['final']['email']['string'],
+                                                  'font_text',
+                                                  self.obj['final']['email']['size'],
+                                                  self.obj['final']['email']['from_top'],
+                                                  True)
+
+        if bool(self.obj['final']['phone']['show']):
+            if USE_FPDF:
+                self.fpdf_centered_text(self.obj['final']['phone']['string'],
+                                        'font_text',
+                                        self.obj['final']['phone']['size'],
+                                        self.obj['final']['phone']['from_top'], black=True)
+            if USE_RL:
+                self.rl_single_line_centered_text(self.obj['final']['phone']['string'],
+                                                  'font_text',
+                                                  self.obj['final']['phone']['size'],
+                                                  self.obj['final']['phone']['from_top'],
+                                                  True)
+
+        if bool(self.obj['final']['disclaimer']['show']):
+            if USE_FPDF:
+                self.fpdf_centered_text(self.obj['final']['disclaimer']['string'],
+                                        'font_text',
+                                        self.obj['final']['disclaimer']['size'],
+                                        self.obj['final']['disclaimer']['from_top'], black=True)
+            if USE_RL:
+                self.rl_single_line_centered_text(self.obj['final']['disclaimer']['string'],
+                                                  'font_text',
+                                                  self.obj['final']['disclaimer']['size'],
+                                                  self.obj['final']['disclaimer']['from_top'],
+                                                  True)
+
+        if USE_RL:
+            self.c.showPage()
 
     def save_pdf(self):
         # Salva
@@ -404,19 +393,20 @@ class FotoPDF:
         if USE_RL:
             self.c.save()
         if self.widget is None:
-            print("{:s} created ({:.1f}MB)!".format(self.abs_output_filename,
-                                                    getsize(self.abs_output_filename) / 1000000.))
+            print("PDF created ({:.1f}MB), check in your folder!".format(getsize(self.abs_output_filename) / 1000000.))
         else:
             self.widget.append(
-                "{:s} created ({:.1f}MB)!".format(self.abs_output_filename,
-                                                  getsize(self.abs_output_filename) / 1000000.))
+                "PDF created ({:.1f}MB), check in your folder!".format(getsize(self.abs_output_filename) / 1000000.))
 
     def create_pdf(self):
-        self.cover_page()
-        self.description_page()
+        if bool(self.obj['cover']['show']):
+            self.cover_page()
+        if bool(self.obj['description']['show']):
+            self.description_page()
         self.image_pages()
         self.grid_page()
-        self.final_page()
+        if self.obj['final']['show']:
+            self.final_page()
         self.save_pdf()
 
 
@@ -445,7 +435,7 @@ class FileEdit(QTextEdit):
             draggedpath = str(urls[0].path())
             if isfile(draggedpath) or isdir(draggedpath):
                 # if filepath[-4:].lower() == ".jpg":
-                self.setText(draggedpath)
+                #self.setText(draggedpath)
                 mypdf = FotoPDF(draggedpath, self)
                 mypdf.create_pdf()
                 # create_pdf(draggedpath, self)
@@ -457,14 +447,16 @@ def main_gui(argv):
     app = QApplication(sys.argv)
     win = QMainWindow()
     win.setGeometry(200, 200, 400, 200)
+    win.setFixedSize(400, 200)
     win.setWindowTitle("FotoPDF")
     app.setWindowIcon(QIcon('FotoPDF.png'))
 
     # Create widget to accept drag&drop
     widget = FileEdit(win)
     widget.setReadOnly(True)
-    widget.setText("Drag folder or one of the images here")
+    # widget.setText("Drag folder or one of the images here")
     widget.setGeometry(0, 0, 400, 200)
+    # widget.setStyleSheet("background-image: url(drophere.png);")
     # widget.setAlignment(Qt.AlignHCenter)
     # widget.setAlignment(Qt.AlignVCenter)
 
