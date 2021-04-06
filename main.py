@@ -126,7 +126,6 @@ class FotoPDF:
         return (from_top + wanted_height), caption
 
     def __init__(self, input_folder, widget=None):
-
         self.widget = widget
 
         # If used as command line (GUI = False), the input folder is sys.argv[1]
@@ -139,15 +138,29 @@ class FotoPDF:
         if isfile(self.input_folder):
             self.input_folder = dirname(abspath(self.input_folder))
 
-        if self.widget is None:
-            print("Creating PDF with images in {}".format(self.input_folder))
-        else:
-            self.widget.setText("Creating PDF with images in {}".format(self.input_folder))
+        # Initialize variables
+        self.obj = None
+        self.abs_output_filename = None
+        self.H = 0
+        self.W = 0
+        if USE_FPDF:
+            self.pdf = None
+        if USE_RL:
+            self.c = None
+        self.images = []
 
+    def inizialize_pdf(self):
         # Lettura JSON
-        with open(join(self.input_folder, 'settings.json'), 'r') as myjson:
-            data = myjson.read()
-        self.obj = json.loads(data)
+        try:
+            with open(join(self.input_folder, 'settings.json'), 'r') as myjson:
+                data = myjson.read()
+            self.obj = json.loads(data)
+        except:
+            if self.widget is None:
+                print("Cannot find settings.json in folder.")
+            else:
+                self.widget.setText("Cannot find settings.json in folder.")
+            return False
 
         # Creazione file e impostazioni generali
         if self.obj["document"]["a4"]:
@@ -197,6 +210,19 @@ class FotoPDF:
         # Ricerca immagini
         self.images = [f for f in listdir(self.input_folder) if f.endswith(".jpg")]
         self.images.sort(key=natural_keys)
+        if len(self.images) == 0:
+            if self.widget is None:
+                print("No image found in folder.")
+            else:
+                self.widget.setText("No image found in folder.")
+            return False
+
+        if self.widget is None:
+            print("Creating PDF with images in {}".format(self.input_folder))
+        else:
+            self.widget.setText("Creating PDF with images in {}".format(self.input_folder))
+
+        return True
 
     def cover_page(self):
         if USE_FPDF:
@@ -394,20 +420,23 @@ class FotoPDF:
             self.c.save()
         if self.widget is None:
             print("PDF created ({:.1f}MB), check in your folder!".format(getsize(self.abs_output_filename) / 1000000.))
+            print("Drag another folder or file to create a new one.")
         else:
             self.widget.append(
                 "PDF created ({:.1f}MB), check in your folder!".format(getsize(self.abs_output_filename) / 1000000.))
+            self.widget.append("Drag another folder or file to create a new one.")
 
     def create_pdf(self):
-        if bool(self.obj['cover']['show']):
-            self.cover_page()
-        if bool(self.obj['description']['show']):
-            self.description_page()
-        self.image_pages()
-        self.grid_page()
-        if self.obj['final']['show']:
-            self.final_page()
-        self.save_pdf()
+        if self.inizialize_pdf():
+            if bool(self.obj['cover']['show']):
+                self.cover_page()
+            if bool(self.obj['description']['show']):
+                self.description_page()
+            self.image_pages()
+            self.grid_page()
+            if self.obj['final']['show']:
+                self.final_page()
+            self.save_pdf()
 
 
 class FileEdit(QTextEdit):
@@ -415,6 +444,7 @@ class FileEdit(QTextEdit):
         super(FileEdit, self).__init__(parent)
         # Si usa solo nel caso del QLineEdit
         # self.setDragEnabled(True)
+        self.setText("Drag a folder with images (or one of the images) and a settings.json to create a pdf.")
 
     def dragEnterEvent(self, event):
         data = event.mimeData()
@@ -435,15 +465,13 @@ class FileEdit(QTextEdit):
             draggedpath = str(urls[0].path())
             if isfile(draggedpath) or isdir(draggedpath):
                 # if filepath[-4:].lower() == ".jpg":
-                # self.setText(draggedpath)
-                mypdf = FotoPDF(draggedpath, self)
-                mypdf.create_pdf()
-                # create_pdf(draggedpath, self)
+                pdf = FotoPDF(draggedpath, self)
+                pdf.create_pdf()
             else:
                 self.setText("Invalid file or folder.")
 
 
-def main_gui(argv):
+def main_gui():
     app = QApplication(sys.argv)
     win = QMainWindow()
     win.setGeometry(200, 200, 400, 200)
@@ -466,7 +494,7 @@ def main_gui(argv):
 
 if __name__ == "__main__":
     if GUI:
-        main_gui(sys.argv[1:])
+        main_gui()
     else:
         mypdf = FotoPDF(sys.argv[1:], None)
         mypdf.create_pdf()
