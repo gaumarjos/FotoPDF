@@ -8,7 +8,7 @@
 
 from os import listdir
 from os.path import join, getsize, isfile, dirname, abspath, isdir
-from fpdf import FPDF
+#from fpdf import FPDF
 import PIL.Image
 import exifread
 # import sys
