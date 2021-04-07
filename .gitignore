@@ -1,6 +1,8 @@
-/venv/
+venv/
+build/
+dist/
 *.pkl
 .DS_Store
 .idea/
 __pycache__/
-build/
+

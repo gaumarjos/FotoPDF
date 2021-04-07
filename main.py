@@ -5,16 +5,16 @@
 # https://python-utilities.readthedocs.io/en/latest/dll.html
 # https://www.techwithtim.net/tutorials/pyqt5-tutorial/basic-gui-application/
 # https://www.reddit.com/r/learnpython/comments/97z5dq/pyqt5_drag_and_drop_file_option/
+# https://blog.aaronhktan.com/posts/2018/05/14/pyqt5-pyinstaller-executable
+# https://github.com/pyinstaller/pyinstaller/issues/5107
 
+import os
 from os import listdir
 from os.path import join, getsize, isfile, dirname, abspath, isdir
-#from fpdf import FPDF
+from fpdf import FPDF
 import PIL.Image
 import exifread
-# import sys
-# from pdfrw import PageMerge, PdfReader, PdfWriter
 import re
-# import getopt
 import sys
 import json
 from reportlab.pdfgen import canvas
@@ -26,8 +26,11 @@ import reportlab.rl_config
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit  # QLabel, QMessageBox, QLineEdit
-# from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
+
+# import getopt
+# from pdfrw import PageMerge, PdfReader, PdfWriter
 
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
@@ -35,6 +38,13 @@ reportlab.rl_config.warnOnMissingFontGlyphs = 0
 GUI = True
 USE_FPDF = False
 USE_RL = True
+
+
+# Translate asset paths to useable format for PyInstaller
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath('.'), relative_path)
 
 
 def atoi(text):
@@ -482,7 +492,7 @@ def main_gui():
     # Create widget to accept drag&drop
     widget = FileEdit(win)
     widget.setReadOnly(True)
-    # widget.setText("Drag folder or one of the images here")
+    widget.setText("Drag folder or one of the images here")
     widget.setGeometry(0, 0, 400, 200)
     # widget.setStyleSheet("background-image: url(drophere.png);")
     # widget.setAlignment(Qt.AlignHCenter)

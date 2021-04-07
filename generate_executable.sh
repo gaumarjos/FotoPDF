@@ -1,5 +1,5 @@
 clear
-rm -rf build dist
+#rm -rf build dist
 pyinstaller --noconfirm --log-level=ERROR \
     --onefile \
     --windowed \
