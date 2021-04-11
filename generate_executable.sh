@@ -1,11 +1,13 @@
 clear
-#rm -rf build dist
 pyinstaller --noconfirm --log-level=ERROR \
+    --clean \
     --onefile \
     --windowed \
+    --debug imports \
     --name FotoPDF \
-    --paths ~/PycharmProjects/FotoPDF/venv/lib/python3.7/site-packages \
-    --add-data font_default.ttf:./font_default.ttf \
-    --add-data FotoPDF.png:./FotoPDF.png \
+    --paths ~/PycharmProjects/FotoPDF/venv/lib/python3.9/site-packages/ \
+    --paths ~/PycharmProjects/FotoPDF/venv/ \
+    --add-data font_default.ttf:. \
+    --add-data FotoPDF.png:. \
     --icon FotoPDF.png \
     main.py

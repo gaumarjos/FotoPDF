@@ -499,6 +499,7 @@ def main_gui():
     # widget.setAlignment(Qt.AlignVCenter)
 
     win.show()
+    #app.exec_()
     sys.exit(app.exec_())
 
 
