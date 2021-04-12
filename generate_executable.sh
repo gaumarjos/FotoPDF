@@ -3,8 +3,8 @@ pyinstaller --noconfirm --log-level=ERROR \
     --clean \
     --onefile \
     --windowed \
-    --debug imports \
     --name FotoPDF \
+    --debug all \
     --paths ~/PycharmProjects/FotoPDF/venv/lib/python3.9/site-packages/ \
     --paths ~/PycharmProjects/FotoPDF/venv/ \
     --add-data font_default.ttf:. \
