@@ -10,7 +10,8 @@ from setuptools import setup
 APP = ['FotoPDF.py']
 DATA_FILES = ['FotoPDF.png', 'font_default.ttf']
 OPTIONS = {
-    'packages': ['reportlab', 'PyQt5', 'os', 'json']
+    'packages': ['reportlab', 'PyQt5', 'os', 'json'],
+    'iconfile': '/Users/ste/PycharmProjects/FotoPDF/FotoPDF.icns'
 }
 
 setup(
