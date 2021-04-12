@@ -115,7 +115,14 @@ class FotoPDF:
         # Read ImageDescription field from JPG. Exifread is the only library that works.
         # Exif doesn't have this tag and Pillow corrupts the accented characters.
         tags = exifread.process_file(open(image, 'rb'))
-        caption = str(tags['Image ImageDescription'])
+        try:
+            caption = str(tags['Image ImageDescription'])
+        except:
+            caption = ""
+            if self.widget is None:
+                print("\"{}\" does not have caption.".format(image))
+            else:
+                self.widget.append("\"{}\" does not have caption.".format(image))
 
         pil_image = PIL.Image.open(image)
         original_image_size = pil_image.size
