@@ -7,11 +7,12 @@
 # https://www.reddit.com/r/learnpython/comments/97z5dq/pyqt5_drag_and_drop_file_option/
 # https://blog.aaronhktan.com/posts/2018/05/14/pyqt5-pyinstaller-executable
 # https://github.com/pyinstaller/pyinstaller/issues/5107
+# http://www.marinamele.com/from-a-python-script-to-a-portable-mac-application-with-py2app
 
 import os
 from os import listdir
 from os.path import join, getsize, isfile, dirname, abspath, isdir
-from fpdf import FPDF
+# from fpdf import FPDF
 import PIL.Image
 import exifread
 import re
@@ -161,7 +162,7 @@ class FotoPDF:
     def inizialize_pdf(self):
         # Lettura JSON
         try:
-            with open(join(self.input_folder, 'settings.json'), 'r') as myjson:
+            with open(join(self.input_folder, 'settings.json'), 'r', encoding="utf8") as myjson:
                 data = myjson.read()
             self.obj = json.loads(data)
         except:
@@ -481,11 +482,8 @@ class FileEdit(QTextEdit):
 
 
 def main_gui():
-    print("THIS RUNS")
     app = QApplication(sys.argv)
-    print("THIS DOESN'T")
     win = QMainWindow()
-    print("THIS DOESN'T")
     win.setGeometry(200, 200, 400, 200)
     win.setFixedSize(400, 200)
     win.setWindowTitle("FotoPDF")

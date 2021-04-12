@@ -7,9 +7,11 @@ Usage:
 
 from setuptools import setup
 
-APP = ['main.py']
-DATA_FILES = []
-OPTIONS = {}
+APP = ['FotoPDF.py']
+DATA_FILES = ['FotoPDF.png', 'font_default.ttf']
+OPTIONS = {
+    'packages': ['reportlab', 'PyQt5', 'os', 'json']
+}
 
 setup(
     app=APP,
