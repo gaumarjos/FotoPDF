@@ -26,7 +26,6 @@ import reportlab.rl_config
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit  # QLabel, QMessageBox, QLineEdit
-from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
 # import getopt
@@ -482,8 +481,11 @@ class FileEdit(QTextEdit):
 
 
 def main_gui():
+    print("THIS RUNS")
     app = QApplication(sys.argv)
+    print("THIS DOESN'T")
     win = QMainWindow()
+    print("THIS DOESN'T")
     win.setGeometry(200, 200, 400, 200)
     win.setFixedSize(400, 200)
     win.setWindowTitle("FotoPDF")
@@ -499,7 +501,6 @@ def main_gui():
     # widget.setAlignment(Qt.AlignVCenter)
 
     win.show()
-    #app.exec_()
     sys.exit(app.exec_())
 
 
