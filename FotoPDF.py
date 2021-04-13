@@ -365,29 +365,28 @@ class FotoPDF:
             self.c.showPage()
 
     def grid_page(self):
-        r = int(self.obj['contactsheet']['rows'])
-        c = int(self.obj['contactsheet']['columns'])
-        m_oriz = self.obj["contactsheet"]["horizontal_margin"]
-        m_vert = self.obj["contactsheet"]["vertical_margin"]
-        m_lat = self.obj["contactsheet"]["lateral_margin"]
-
-
+        r = int(self.obj['grid']['rows'])
+        c = int(self.obj['grid']['columns'])
+        m_oriz = self.obj["grid"]["horizontal_margin"]
+        m_vert = self.obj["grid"]["vertical_margin"]
+        m_lat = self.obj["grid"]["lateral_margin"]
+        image_ratio = self.obj["grid"]["image_ratio"]
 
         # Parto dalle colonne e vedo se l'altezza sta nei margini
-        w = (self.W - 2 * m_lat - (c - 1) * m_oriz) / c
-        h = w / 3. * 2.
-        total_h = r * h + (r - 1) * m_vert + m_lat
+        rect_w = (self.W - 2 * m_lat - (c - 1) * m_oriz) / c
+        rect_h = rect_w / image_ratio
+        total_h = r * rect_h + (r - 1) * m_vert + m_lat
         # E' troppo alta, devo ripartire dalle righe e calcolare le colonne di conseguenza
         if total_h > self.H:
-            h = (self.H - 2 * m_lat - (r - 1) * m_vert) / r
-            w = h * 3. / 2.
-            total_w = c * w + (c - 1) * m_oriz + m_lat
+            rect_h = (self.H - 2 * m_lat - (r - 1) * m_vert) / r
+            rect_w = rect_h * image_ratio
+            total_w = c * rect_w + (c - 1) * m_oriz + m_lat
             if total_w > self.W:
                 print("Non può essere.")
 
         # if USE_FPDF:
         #     self.pdf.add_page()
-        #     if bool(self.obj['contactsheet']['black_background']):
+        #     if bool(self.obj['grid']['black_background']):
         #         self.pdf.set_fill_color(0, 0, 0)
         #         self.pdf.cell(0, self.H, "", 0, 1, align="C", fill=True)
         #     for i, image in enumerate(self.images):
@@ -396,16 +395,30 @@ class FotoPDF:
         #                        y=(self.H - (r * h + (r - 1) * m_vert)) / 2 + int(i / c) * (h + m_vert),
         #                        w=w, h=0)
 
-        if bool(self.obj['contactsheet']['black_background']):
+        if bool(self.obj['grid']['black_background']):
             self.c.setFillColorRGB(0, 0, 0)
             self.c.rect(0, 0, self.W, self.H, fill=1)
+
         for i, image in enumerate(self.images):
+            original_image_size = PIL.Image.open(join(self.input_folder, image)).size
+            rect_x = (self.W - (c * rect_w + (c - 1) * m_oriz)) / 2 + (i % c) * (rect_w + m_oriz)
+            rect_y = self.H - rect_h - ((self.H - (r * rect_h + (r - 1) * m_vert)) / 2 + int(i / c) * (rect_h + m_vert))
+            scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h = self.fit_image(rect_x, rect_y,
+                                                                                            rect_w, rect_h,
+                                                                                            original_image_size[0],
+                                                                                            original_image_size[1])
             self.c.drawImage(join(self.input_folder, image),
-                             x=(self.W - (c * w + (c - 1) * m_oriz)) / 2 + (i % c) * (w + m_oriz),
-                             y=self.H - h - ((self.H - (r * h + (r - 1) * m_vert)) / 2 + int(i / c) * (h + m_vert)),
-                             width=w,
-                             height=h,
+                             x=scaled_image_x,
+                             y=scaled_image_y,
+                             width=scaled_image_w,
+                             height=scaled_image_h,
                              mask=None)
+            # self.c.drawImage(join(self.input_folder, image),
+            #                  x=(self.W - (c * w + (c - 1) * m_oriz)) / 2 + (i % c) * (w + m_oriz),
+            #                  y=self.H - h - ((self.H - (r * h + (r - 1) * m_vert)) / 2 + int(i / c) * (h + m_vert)),
+            #                  width=w,
+            #                  height=h,
+            #                  mask=None)
         self.c.showPage()
 
     def final_page(self):
