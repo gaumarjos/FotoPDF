@@ -28,7 +28,8 @@ import reportlab.rl_config
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit  # QLabel, QMessageBox, QLineEdit
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QSyntaxHighlighter, QTextCharFormat
+from PyQt5.QtCore import Qt
 
 # import getopt
 # from pdfrw import PageMerge, PdfReader, PdfWriter
@@ -63,6 +64,15 @@ def clean_html(raw_html):
 
 
 class FotoPDF:
+
+    def message(self, text, append=True):
+        if self.widget is None:
+            print(text)
+        else:
+            if append:
+                self.widget.append(text)
+            else:
+                self.widget.setText(text)
 
     def fpdf_centered_text(self, text, font, size, y, black=True):
         self.pdf.set_y(y)
@@ -107,10 +117,7 @@ class FotoPDF:
         if w <= aw and h <= ah:
             p.drawOn(self.c, from_side, (self.H - from_top - h) if (from_top > 0) else ((self.H - h) / 2.))
         else:
-            if self.widget is None:
-                print("Error: text cell too small for text.")
-            else:
-                self.widget.append("Error: text cell too small for text.")
+            self.message("Error: text cell too small for text.")
 
     def rl_centered_image(self, image, from_side, from_top):
         # Read ImageDescription field from JPG. Exifread is the only library that works.
@@ -120,10 +127,7 @@ class FotoPDF:
             caption = str(tags['Image ImageDescription'])
         except:
             caption = ""
-            if self.widget is None:
-                print("\"{}\" does not have caption.".format(image))
-            else:
-                self.widget.append("\"{}\" does not have caption.".format(image))
+            self.message("Warning: \"{}\" does not have a caption.".format(os.path.basename(image)))
 
         pil_image = PIL.Image.open(image)
         original_image_size = pil_image.size
@@ -174,10 +178,7 @@ class FotoPDF:
                 data = myjson.read()
             self.obj = json.loads(data)
         except:
-            if self.widget is None:
-                print("Cannot find settings.json in folder.")
-            else:
-                self.widget.setText("Cannot find settings.json in folder.")
+            self.message("Error: Cannot find settings.json in folder.", append=False)
             return False
 
         # Creazione file e impostazioni generali
@@ -186,10 +187,7 @@ class FotoPDF:
         else:
             self.H = self.obj["document"]["height"]
             self.W = self.obj["document"]["width"]
-        # if self.widget is None:
-        #     print("Slide format: {:f}x{:f}pt.".format(self.H, self.W))
-        # else:
-        #     self.widget.append("Slide format: {:f}x{:f}pt.".format(self.H, self.W))
+        # self.message("Slide format: {:f}x{:f}pt.".format(self.H, self.W))
 
         output_filename = clean_html(self.obj['document']['title']) + ', ' + clean_html(self.obj['document']['author'])
         if len(self.obj['document']['suffix']) > 0:
@@ -220,25 +218,33 @@ class FotoPDF:
             self.c.setAuthor(self.obj["document"]["author"])
 
             # Use user-defined True Type Font (TTF)
-            pdfmetrics.registerFont(TTFont('font_title', self.obj["fonts"]["title"]))
-            pdfmetrics.registerFont(TTFont('font_author', self.obj["fonts"]["author"]))
-            pdfmetrics.registerFont(TTFont('font_text', self.obj["fonts"]["text"]))
+            try:
+                pdfmetrics.registerFont(TTFont('font_title', self.obj["fonts"]["title"]))
+            except:
+                self.message("Error: Cannot find font_title, looking in {}".format(self.obj["fonts"]["title"]))
+                return False
+
+            try:
+                pdfmetrics.registerFont(TTFont('font_author', self.obj["fonts"]["author"]))
+            except:
+                self.message("Error: Cannot find font_author, looking in {}".format(self.obj["fonts"]["author"]))
+                return False
+
+            try:
+                pdfmetrics.registerFont(TTFont('font_text', self.obj["fonts"]["text"]))
+            except:
+                self.message("Error: Cannot find font_text, looking in {}".format(self.obj["fonts"]["text"]))
+                return False
+
             self.c.setFont('font_text', 16)
 
         # Ricerca immagini
         self.images = [f for f in listdir(self.input_folder) if f.endswith(".jpg")]
         self.images.sort(key=natural_keys)
         if len(self.images) == 0:
-            if self.widget is None:
-                print("No image found in folder.")
-            else:
-                self.widget.setText("No image found in folder.")
+            self.message("Error: No image found in folder.", append=False)
             return False
-
-        if self.widget is None:
-            print("Creating PDF with images in {}".format(self.input_folder))
-        else:
-            self.widget.setText("Creating PDF with images in {}".format(self.input_folder))
+        self.message("Info: Creating PDF with images in {}".format(self.input_folder), append=False)
 
         return True
 
@@ -436,13 +442,9 @@ class FotoPDF:
             self.pdf.output(self.abs_output_filename, "F")
         if USE_RL:
             self.c.save()
-        if self.widget is None:
-            print("PDF created ({:.1f}MB), check in your folder!".format(getsize(self.abs_output_filename) / 1000000.))
-            print("Drag another folder or file to create a new one.")
-        else:
-            self.widget.append(
-                "PDF created ({:.1f}MB), check in your folder!".format(getsize(self.abs_output_filename) / 1000000.))
-            self.widget.append("Drag another folder or file to create a new one.")
+        self.message(
+            "Info: PDF created ({:.1f}MB), check in your folder!".format(getsize(self.abs_output_filename) / 1000000.))
+        self.message("Info: Drag another folder or file to create a new one.")
 
     def create_pdf(self):
         if self.inizialize_pdf():
@@ -462,7 +464,6 @@ class FileEdit(QTextEdit):
         super(FileEdit, self).__init__(parent)
         # Si usa solo nel caso del QLineEdit
         # self.setDragEnabled(True)
-        self.setText("Drag a folder with images (or one of the images) and a settings.json to create a pdf.")
 
     def dragEnterEvent(self, event):
         data = event.mimeData()
@@ -489,19 +490,44 @@ class FileEdit(QTextEdit):
                 self.setText("Invalid file or folder.")
 
 
+class Highlighter(QSyntaxHighlighter):
+    def __init__(self, parent):
+        super(Highlighter, self).__init__(parent)
+        self.infoFormat = QTextCharFormat()
+        self.infoFormat.setForeground(Qt.black)
+        self.infoFormat.setBackground(Qt.green)
+        self.warningFormat = QTextCharFormat()
+        self.warningFormat.setForeground(Qt.black)
+        self.warningFormat.setBackground(Qt.yellow)
+        self.errorFormat = QTextCharFormat()
+        self.errorFormat.setForeground(Qt.white)
+        self.errorFormat.setBackground(Qt.red)
+
+    def highlightBlock(self, text):
+        # uncomment this line for Python2
+        # text = unicode(text)
+        if text.startswith('Info'):
+            self.setFormat(0, len(text), self.infoFormat)
+        elif text.startswith('Warning'):
+            self.setFormat(0, len(text), self.warningFormat)
+        elif text.startswith('Error'):
+            self.setFormat(0, len(text), self.errorFormat)
+
+
 def main_gui():
     app = QApplication(sys.argv)
     win = QMainWindow()
-    win.setGeometry(200, 200, 400, 200)
-    win.setFixedSize(400, 200)
+    win.setGeometry(200, 200, 600, 200)
+    win.setFixedSize(600, 200)
     win.setWindowTitle("FotoPDF")
     app.setWindowIcon(QIcon('FotoPDF.png'))
 
     # Create widget to accept drag&drop
     widget = FileEdit(win)
+    highlighter = Highlighter(widget.document())
     widget.setReadOnly(True)
-    widget.setText("Drag folder or one of the images here")
-    widget.setGeometry(0, 0, 400, 200)
+    widget.setText("Info: Drag folder or one of the images here")
+    widget.setGeometry(0, 0, 600, 200)
     # widget.setStyleSheet("background-image: url(drophere.png);")
     # widget.setAlignment(Qt.AlignHCenter)
     # widget.setAlignment(Qt.AlignVCenter)
