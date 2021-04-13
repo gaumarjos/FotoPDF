@@ -10,6 +10,7 @@
 # http://www.marinamele.com/from-a-python-script-to-a-portable-mac-application-with-py2app
 # https://py2app.readthedocs.io/_/downloads/en/stable/pdf/
 
+
 import os
 from os import listdir
 from os.path import join, getsize, isfile, dirname, abspath, isdir
@@ -27,8 +28,8 @@ from reportlab.lib.pagesizes import A4, landscape
 import reportlab.rl_config
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit  # QLabel, QMessageBox, QLineEdit
-from PyQt5.QtGui import QIcon, QSyntaxHighlighter, QTextCharFormat
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit  # QLabel, QMessageBox, QLineEdit
+from PyQt5.QtGui import QIcon, QSyntaxHighlighter, QTextCharFormat, QColor
 from PyQt5.QtCore import Qt
 
 # import getopt
@@ -40,6 +41,14 @@ reportlab.rl_config.warnOnMissingFontGlyphs = 0
 GUI = True
 USE_FPDF = False
 USE_RL = True
+MACOSRED = (236, 95, 93)
+MACOSORANGE = (232, 135, 58)
+MACOSYELLOW = (255, 200, 60)
+MACOSGREEN = (120, 183, 86)
+MACOSCYAN = (84, 153, 166)
+MACOSBLUE = (48, 123, 246)
+MACOSMAGENTA = (154, 86, 163)
+MACOSDARK = (46, 46, 46)
 
 
 # Translate asset paths to useable format for PyInstaller
@@ -65,14 +74,45 @@ def clean_html(raw_html):
 
 class FotoPDF:
 
-    def message(self, text, append=True):
-        if self.widget is None:
+    def __init__(self, input_folder, header_widget=None, detail_widget=None):
+        self.header_widget = header_widget
+        self.detail_widget = detail_widget
+
+        # If used as command line (GUI = False), the input folder is sys.argv[1]
+        if self.header_widget is None:
+            self.input_folder = str(input_folder[0])
+        else:
+            self.input_folder = input_folder
+
+        # If it's a file instead of a folder, just take the folder containing the file
+        if isfile(self.input_folder):
+            self.input_folder = dirname(abspath(self.input_folder))
+
+        # Initialize variables
+        self.obj = None
+        self.abs_output_filename = None
+        self.H = 0
+        self.W = 0
+        if USE_FPDF:
+            self.pdf = None
+        if USE_RL:
+            self.c = None
+        self.images = []
+
+    def message_on_header_widget(self, text, append=True):
+        if self.header_widget is None:
+            print(text)
+        else:
+            self.header_widget.setText(text)
+
+    def message_on_detail_widget(self, text, append=True):
+        if self.detail_widget is None:
             print(text)
         else:
             if append:
-                self.widget.append(text)
+                self.detail_widget.append(text)
             else:
-                self.widget.setText(text)
+                self.detail_widget.setText(text)
 
     def fpdf_centered_text(self, text, font, size, y, black=True):
         self.pdf.set_y(y)
@@ -117,7 +157,7 @@ class FotoPDF:
         if w <= aw and h <= ah:
             p.drawOn(self.c, from_side, (self.H - from_top - h) if (from_top > 0) else ((self.H - h) / 2.))
         else:
-            self.message("Error: text cell too small for text.")
+            self.message_on_detail_widget("Warning: text cell too small for text.")
 
     def rl_centered_image(self, image, from_side, from_top):
         # Read ImageDescription field from JPG. Exifread is the only library that works.
@@ -127,7 +167,7 @@ class FotoPDF:
             caption = str(tags['Image ImageDescription'])
         except:
             caption = ""
-            self.message("Warning: \"{}\" does not have a caption.".format(os.path.basename(image)))
+            self.message_on_detail_widget("Warning: \"{}\" does not have a caption.".format(os.path.basename(image)))
 
         pil_image = PIL.Image.open(image)
         original_image_size = pil_image.size
@@ -147,38 +187,17 @@ class FotoPDF:
         # im.drawOn(c, from_side, page_height - from_side - wanted_height)
         return (from_top + wanted_height), caption
 
-    def __init__(self, input_folder, widget=None):
-        self.widget = widget
-
-        # If used as command line (GUI = False), the input folder is sys.argv[1]
-        if self.widget is None:
-            self.input_folder = str(input_folder[0])
-        else:
-            self.input_folder = input_folder
-
-        # If it's a file instead of a folder, just take the folder containing the file
-        if isfile(self.input_folder):
-            self.input_folder = dirname(abspath(self.input_folder))
-
-        # Initialize variables
-        self.obj = None
-        self.abs_output_filename = None
-        self.H = 0
-        self.W = 0
-        if USE_FPDF:
-            self.pdf = None
-        if USE_RL:
-            self.c = None
-        self.images = []
-
     def inizialize_pdf(self):
+        # In any case, write to drag folder here
+        self.message_on_header_widget("Drag folder here")
+
         # Lettura JSON
         try:
             with open(join(self.input_folder, 'settings.json'), 'r', encoding="utf8") as myjson:
                 data = myjson.read()
             self.obj = json.loads(data)
         except:
-            self.message("Error: Cannot find settings.json in folder.", append=False)
+            self.message_on_detail_widget("Error: Cannot find settings.json in folder.", append=False)
             return False
 
         # Creazione file e impostazioni generali
@@ -187,7 +206,6 @@ class FotoPDF:
         else:
             self.H = self.obj["document"]["height"]
             self.W = self.obj["document"]["width"]
-        # self.message("Slide format: {:f}x{:f}pt.".format(self.H, self.W))
 
         output_filename = clean_html(self.obj['document']['title']) + ', ' + clean_html(self.obj['document']['author'])
         if len(self.obj['document']['suffix']) > 0:
@@ -221,19 +239,22 @@ class FotoPDF:
             try:
                 pdfmetrics.registerFont(TTFont('font_title', self.obj["fonts"]["title"]))
             except:
-                self.message("Error: Cannot find font_title, looking in {}".format(self.obj["fonts"]["title"]))
+                self.message_on_detail_widget(
+                    "Error: Cannot find font_title, looking in {}".format(self.obj["fonts"]["title"]))
                 return False
 
             try:
                 pdfmetrics.registerFont(TTFont('font_author', self.obj["fonts"]["author"]))
             except:
-                self.message("Error: Cannot find font_author, looking in {}".format(self.obj["fonts"]["author"]))
+                self.message_on_detail_widget("Error: Cannot find font_author, looking in {}".format(
+                    self.obj["fonts"]["author"]))
                 return False
 
             try:
                 pdfmetrics.registerFont(TTFont('font_text', self.obj["fonts"]["text"]))
             except:
-                self.message("Error: Cannot find font_text, looking in {}".format(self.obj["fonts"]["text"]))
+                self.message_on_detail_widget("Error: Cannot find font_text, looking in {}".format(
+                    self.obj["fonts"]["text"]))
                 return False
 
             self.c.setFont('font_text', 16)
@@ -242,9 +263,9 @@ class FotoPDF:
         self.images = [f for f in listdir(self.input_folder) if f.endswith(".jpg")]
         self.images.sort(key=natural_keys)
         if len(self.images) == 0:
-            self.message("Error: No image found in folder.", append=False)
+            self.message_on_detail_widget("Error: No image found in folder.", append=False)
             return False
-        self.message("Info: Creating PDF with images in {}".format(self.input_folder), append=False)
+        self.message_on_detail_widget("Creating PDF with images in \"{}\".".format(self.input_folder), append=False)
 
         return True
 
@@ -442,9 +463,9 @@ class FotoPDF:
             self.pdf.output(self.abs_output_filename, "F")
         if USE_RL:
             self.c.save()
-        self.message(
-            "Info: PDF created ({:.1f}MB), check in your folder!".format(getsize(self.abs_output_filename) / 1000000.))
-        self.message("Info: Drag another folder or file to create a new one.")
+        self.message_on_header_widget("Created ({:.1f}MB)!".format(
+            getsize(self.abs_output_filename) / 1000000.))
+        self.message_on_detail_widget("Drag another folder to create a new one.")
 
     def create_pdf(self):
         if self.inizialize_pdf():
@@ -459,11 +480,12 @@ class FotoPDF:
             self.save_pdf()
 
 
-class FileEdit(QTextEdit):
-    def __init__(self, parent):
+class FileEdit(QLineEdit):
+    def __init__(self, parent, detail_widget):
         super(FileEdit, self).__init__(parent)
         # Si usa solo nel caso del QLineEdit
         # self.setDragEnabled(True)
+        self.detail_widget = detail_widget
 
     def dragEnterEvent(self, event):
         data = event.mimeData()
@@ -484,7 +506,8 @@ class FileEdit(QTextEdit):
             draggedpath = str(urls[0].path())
             if isfile(draggedpath) or isdir(draggedpath):
                 # if filepath[-4:].lower() == ".jpg":
-                pdf = FotoPDF(draggedpath, self)
+
+                pdf = FotoPDF(draggedpath, self, self.detail_widget)
                 pdf.create_pdf()
             else:
                 self.setText("Invalid file or folder.")
@@ -494,14 +517,15 @@ class Highlighter(QSyntaxHighlighter):
     def __init__(self, parent):
         super(Highlighter, self).__init__(parent)
         self.infoFormat = QTextCharFormat()
-        self.infoFormat.setForeground(Qt.black)
+        self.infoFormat.setForeground(Qt.white)
         self.infoFormat.setBackground(Qt.green)
         self.warningFormat = QTextCharFormat()
         self.warningFormat.setForeground(Qt.black)
-        self.warningFormat.setBackground(Qt.yellow)
+        #self.warningFormat.setBackground(Qt.yellow)
+        self.warningFormat.setBackground(QColor(MACOSYELLOW[0], MACOSYELLOW[1], MACOSYELLOW[2]))
         self.errorFormat = QTextCharFormat()
         self.errorFormat.setForeground(Qt.white)
-        self.errorFormat.setBackground(Qt.red)
+        self.errorFormat.setBackground(QColor(MACOSRED[0], MACOSRED[1], MACOSRED[2]))
 
     def highlightBlock(self, text):
         # uncomment this line for Python2
@@ -514,26 +538,36 @@ class Highlighter(QSyntaxHighlighter):
             self.setFormat(0, len(text), self.errorFormat)
 
 
-def main_gui():
-    app = QApplication(sys.argv)
-    win = QMainWindow()
-    win.setGeometry(200, 200, 600, 200)
-    win.setFixedSize(600, 200)
-    win.setWindowTitle("FotoPDF")
-    app.setWindowIcon(QIcon('FotoPDF.png'))
+class main_gui():
+    def __init__(self):
+        self.app = QApplication(sys.argv)
+        self.win = QMainWindow()
+        self.win.setGeometry(200, 200, 300, 450)
+        self.win.setFixedSize(300, 450)
+        self.win.setWindowTitle("FotoPDF")
+        self.app.setWindowIcon(QIcon('FotoPDF.png'))
 
-    # Create widget to accept drag&drop
-    widget = FileEdit(win)
-    highlighter = Highlighter(widget.document())
-    widget.setReadOnly(True)
-    widget.setText("Info: Drag folder or one of the images here")
-    widget.setGeometry(0, 0, 600, 200)
-    # widget.setStyleSheet("background-image: url(drophere.png);")
-    # widget.setAlignment(Qt.AlignHCenter)
-    # widget.setAlignment(Qt.AlignVCenter)
+        self.detail_widget = QTextEdit(self.win)
+        self.detail_widget.setAlignment(Qt.AlignCenter)
+        highlighter = Highlighter(self.detail_widget.document())
+        self.detail_widget.setReadOnly(True)
+        self.detail_widget.setText("Tip: it works with both a folder or any file in that folder.")
+        self.detail_widget.setGeometry(0, 300, 300, 150)
+        self.detail_widget.setStyleSheet("background-color: rgb{}; color: rgb(255,255,255);".format(str(MACOSDARK)))
 
-    win.show()
-    sys.exit(app.exec_())
+        # Create widget to accept drag&drop
+        self.header_widget = FileEdit(self.win, self.detail_widget)
+        self.header_widget.setAlignment(Qt.AlignCenter)
+        self.header_widget.setReadOnly(True)
+        self.header_widget.setText("Drag folder here")
+        self.header_widget.setGeometry(0, 0, 300, 300)
+        font = self.header_widget.font()
+        font.setPointSize(32)
+        self.header_widget.setFont(font)
+        self.header_widget.setStyleSheet("background-color: rgb{}; color: rgb(255,255,255);border : 5px solid rgb{};".format(str(MACOSYELLOW), str(MACOSDARK)))
+
+        self.win.show()
+        sys.exit(self.app.exec_())
 
 
 if __name__ == "__main__":
