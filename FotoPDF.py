@@ -39,8 +39,8 @@ reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
 # Constants
 GUI = True
-USE_FPDF = False
-USE_RL = True
+# USE_FPDF = False
+# USE_RL = True
 MACOSRED = (236, 95, 93)
 MACOSORANGE = (232, 135, 58)
 MACOSYELLOW = (255, 200, 60)
@@ -93,10 +93,9 @@ class FotoPDF:
         self.abs_output_filename = None
         self.H = 0
         self.W = 0
-        if USE_FPDF:
-            self.pdf = None
-        if USE_RL:
-            self.c = None
+        # if USE_FPDF:
+        #     self.pdf = None
+        self.c = None
         self.images = []
 
     def message_on_header_widget(self, text, append=True):
@@ -132,15 +131,15 @@ class FotoPDF:
             scaled_image_y = (rect_h - scaled_image_h) / 2. + rect_y
         return scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h
 
-    def fpdf_centered_text(self, text, font, size, y, black=True):
-        self.pdf.set_y(y)
-        self.pdf.set_font(font, '', size)
-        if black:
-            self.pdf.set_text_color(0, 0, 0)
-        else:
-            self.pdf.set_text_color(255, 255, 255)
-        self.pdf.cell(0, 0, text, 0, 1, align="C", fill=False)
-        self.pdf.set_text_color(0, 0, 0)
+    # def fpdf_centered_text(self, text, font, size, y, black=True):
+    #     self.pdf.set_y(y)
+    #     self.pdf.set_font(font, '', size)
+    #     if black:
+    #         self.pdf.set_text_color(0, 0, 0)
+    #     else:
+    #         self.pdf.set_text_color(255, 255, 255)
+    #     self.pdf.cell(0, 0, text, 0, 1, align="C", fill=False)
+    #     self.pdf.set_text_color(0, 0, 0)
 
     def rl_single_line_centered_text(self, text, font, size, y, black=True):
         self.c.setFont(font, size)
@@ -187,8 +186,7 @@ class FotoPDF:
             caption = ""
             self.message_on_detail_widget("Warning: \"{}\" does not have a caption.".format(os.path.basename(image)))
 
-        pil_image = PIL.Image.open(image)
-        original_image_size = pil_image.size
+        original_image_size = PIL.Image.open(image).size
         scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h = self.fit_image(from_side,
                                                                                         50,
                                                                                         self.W - from_side * 2,
@@ -228,52 +226,51 @@ class FotoPDF:
             output_filename = output_filename + ', ' + clean_html(self.obj['document']['suffix']) + ".pdf"
         self.abs_output_filename = join(self.input_folder, output_filename)
 
-        if USE_FPDF:
-            # Constructor
-            self.pdf = FPDF(orientation='L', unit='pt', format=(self.H, self.W))
-            self.pdf.set_compression(True)
-            self.pdf.set_margins(0, 0, 0)
-            self.pdf.set_auto_page_break(False)
-            self.pdf.set_fill_color(255, 255, 255)
-            self.pdf.set_text_color(0, 0, 0)
-            self.pdf.set_title(self.obj["document"]["title"])
-            self.pdf.set_author(self.obj["document"]["author"])
+        # if USE_FPDF:
+        #     # Constructor
+        #     self.pdf = FPDF(orientation='L', unit='pt', format=(self.H, self.W))
+        #     self.pdf.set_compression(True)
+        #     self.pdf.set_margins(0, 0, 0)
+        #     self.pdf.set_auto_page_break(False)
+        #     self.pdf.set_fill_color(255, 255, 255)
+        #     self.pdf.set_text_color(0, 0, 0)
+        #     self.pdf.set_title(self.obj["document"]["title"])
+        #     self.pdf.set_author(self.obj["document"]["author"])
+        #
+        #     # Use user-defined True Type Font (TTF)
+        #     self.pdf.add_font('font_title', '', self.obj["fonts"]["title"], uni=True)
+        #     self.pdf.add_font('font_author', '', self.obj["fonts"]["author"], uni=True)
+        #     self.pdf.add_font('font_text', '', self.obj["fonts"]["text"], uni=True)
 
-            # Use user-defined True Type Font (TTF)
-            self.pdf.add_font('font_title', '', self.obj["fonts"]["title"], uni=True)
-            self.pdf.add_font('font_author', '', self.obj["fonts"]["author"], uni=True)
-            self.pdf.add_font('font_text', '', self.obj["fonts"]["text"], uni=True)
+        # Constructor
+        self.c = canvas.Canvas(self.abs_output_filename, enforceColorSpace='RGB')
+        self.c.setPageSize((self.W, self.H))
+        self.c.setTitle(self.obj["document"]["title"])
+        self.c.setAuthor(self.obj["document"]["author"])
 
-        if USE_RL:
-            # Constructor
-            self.c = canvas.Canvas(self.abs_output_filename, enforceColorSpace='RGB')
-            self.c.setPageSize((self.W, self.H))
-            self.c.setTitle(self.obj["document"]["title"])
-            self.c.setAuthor(self.obj["document"]["author"])
+        # Use user-defined True Type Font (TTF)
+        try:
+            pdfmetrics.registerFont(TTFont('font_title', self.obj["fonts"]["title"]))
+        except:
+            self.message_on_detail_widget(
+                "Error: Cannot find font_title, looking in {}".format(self.obj["fonts"]["title"]))
+            return False
 
-            # Use user-defined True Type Font (TTF)
-            try:
-                pdfmetrics.registerFont(TTFont('font_title', self.obj["fonts"]["title"]))
-            except:
-                self.message_on_detail_widget(
-                    "Error: Cannot find font_title, looking in {}".format(self.obj["fonts"]["title"]))
-                return False
+        try:
+            pdfmetrics.registerFont(TTFont('font_author', self.obj["fonts"]["author"]))
+        except:
+            self.message_on_detail_widget("Error: Cannot find font_author, looking in {}".format(
+                self.obj["fonts"]["author"]))
+            return False
 
-            try:
-                pdfmetrics.registerFont(TTFont('font_author', self.obj["fonts"]["author"]))
-            except:
-                self.message_on_detail_widget("Error: Cannot find font_author, looking in {}".format(
-                    self.obj["fonts"]["author"]))
-                return False
+        try:
+            pdfmetrics.registerFont(TTFont('font_text', self.obj["fonts"]["text"]))
+        except:
+            self.message_on_detail_widget("Error: Cannot find font_text, looking in {}".format(
+                self.obj["fonts"]["text"]))
+            return False
 
-            try:
-                pdfmetrics.registerFont(TTFont('font_text', self.obj["fonts"]["text"]))
-            except:
-                self.message_on_detail_widget("Error: Cannot find font_text, looking in {}".format(
-                    self.obj["fonts"]["text"]))
-                return False
-
-            self.c.setFont('font_text', 16)
+        self.c.setFont('font_text', 16)
 
         # Ricerca immagini
         self.images = [f for f in listdir(self.input_folder) if f.endswith(".jpg")]
@@ -286,88 +283,86 @@ class FotoPDF:
         return True
 
     def cover_page(self):
-        if USE_FPDF:
-            self.pdf.add_page()
-            if self.obj["cover"]["use_image"] >= 0:
-                self.pdf.image(join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1]), x=-10, y=0,
-                               w=0,
-                               h=self.H,
-                               type="JPEG")
-            self.fpdf_centered_text(self.obj['document']['title'], 'myfont',
-                                    int(self.obj['cover']['title']['size']),
-                                    int(self.obj['cover']['title']['from_top']),
-                                    self.obj["cover"]["title"]["black_text"])
-            self.fpdf_centered_text(self.obj["document"]["author"], 'myfont',
-                                    int(self.obj['cover']['author']['size']),
-                                    int(self.obj['cover']['author']['from_top']),
-                                    self.obj["cover"]["author"]["black_text"])
-        if USE_RL:
-            original_image_size = PIL.Image.open(
-                join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1])).size
-            self.c.drawImage(join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1]),
-                             (self.W - original_image_size[0]) / 2,
-                             0,
-                             width=None, height=self.H, preserveAspectRatio=True)
-            self.rl_text(self.obj['document']['title'], 'font_title', 1, int(self.obj['cover']['title']['size']),
-                         int(self.obj['cover']['title']['interline']), int(self.obj['cover']['title']['from_side']),
-                         int(self.obj['cover']['title']['from_top']),
-                         black=self.obj["cover"]["title"]["black_text"])
-            self.rl_single_line_centered_text(self.obj["document"]["author"], 'font_author',
-                                              int(self.obj['cover']['author']['size']),
-                                              int(self.obj['cover']['author']['from_top']),
-                                              self.obj["cover"]["author"]["black_text"])
-            self.c.showPage()
+        # if USE_FPDF:
+        #     self.pdf.add_page()
+        #     if self.obj["cover"]["use_image"] >= 0:
+        #         self.pdf.image(join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1]), x=-10, y=0,
+        #                        w=0,
+        #                        h=self.H,
+        #                        type="JPEG")
+        #     self.fpdf_centered_text(self.obj['document']['title'], 'myfont',
+        #                             int(self.obj['cover']['title']['size']),
+        #                             int(self.obj['cover']['title']['from_top']),
+        #                             self.obj["cover"]["title"]["black_text"])
+        #     self.fpdf_centered_text(self.obj["document"]["author"], 'myfont',
+        #                             int(self.obj['cover']['author']['size']),
+        #                             int(self.obj['cover']['author']['from_top']),
+        #                             self.obj["cover"]["author"]["black_text"])
+
+        original_image_size = PIL.Image.open(
+            join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1])).size
+        self.c.drawImage(join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1]),
+                         (self.W - original_image_size[0]) / 2,
+                         0,
+                         width=None, height=self.H, preserveAspectRatio=True)
+        self.rl_text(self.obj['document']['title'], 'font_title', 1, int(self.obj['cover']['title']['size']),
+                     int(self.obj['cover']['title']['interline']), int(self.obj['cover']['title']['from_side']),
+                     int(self.obj['cover']['title']['from_top']),
+                     black=self.obj["cover"]["title"]["black_text"])
+        self.rl_single_line_centered_text(self.obj["document"]["author"], 'font_author',
+                                          int(self.obj['cover']['author']['size']),
+                                          int(self.obj['cover']['author']['from_top']),
+                                          self.obj["cover"]["author"]["black_text"])
+        self.c.showPage()
 
     def description_page(self):
-        if USE_FPDF:
-            self.pdf.add_page()
-            self.pdf.set_y(int(self.obj['description']['from_top']))
-            self.pdf.set_x(int(self.obj['description']['from_side']))
-            self.pdf.set_font_size(int(self.obj['description']['size']))
-            self.pdf.multi_cell(w=self.W - int(self.obj['description']['from_side']) * 2,
-                                h=int(self.obj['description']['interline']),
-                                txt=self.obj['description']['string'], border=0, align="L", fill=False)
+        # if USE_FPDF:
+        #     self.pdf.add_page()
+        #     self.pdf.set_y(int(self.obj['description']['from_top']))
+        #     self.pdf.set_x(int(self.obj['description']['from_side']))
+        #     self.pdf.set_font_size(int(self.obj['description']['size']))
+        #     self.pdf.multi_cell(w=self.W - int(self.obj['description']['from_side']) * 2,
+        #                         h=int(self.obj['description']['interline']),
+        #                         txt=self.obj['description']['string'], border=0, align="L", fill=False)
 
-        if USE_RL:
-            text = self.obj['description']['string']
-            text = text.replace("\n", "<br/>")
-            self.rl_text(text, 'font_text', 0, self.obj['description']['size'],
-                         self.obj['description']['interline'], self.obj['description']['from_side'],
-                         self.obj['description']['from_top'])
-            self.c.showPage()
+        text = self.obj['description']['string']
+        text = text.replace("\n", "<br/>")
+        self.rl_text(text, 'font_text', 0, self.obj['description']['size'],
+                     self.obj['description']['interline'], self.obj['description']['from_side'],
+                     self.obj['description']['from_top'])
+        self.c.showPage()
 
     def image_pages(self):
-        if USE_FPDF:
-            self.pdf.set_font_size(int(self.obj['photos']['size']))
-            for i, image in enumerate(self.images):
-                self.pdf.add_page()
+        # if USE_FPDF:
+        #     self.pdf.set_font_size(int(self.obj['photos']['size']))
+        #     for i, image in enumerate(self.images):
+        #         self.pdf.add_page()
+        #
+        #         original_image_size = PIL.Image.open(image).size
+        #         scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h = self.fit_image(12, 10,
+        #                                                                                         self.W - 24,
+        #                                                                                         self.H - 30,
+        #                                                                                         original_image_size[0],
+        #                                                                                         original_image_size[1])
+        #         self.pdf.image(join(self.input_folder, image), x=scaled_image_x, y=scaled_image_y, w=scaled_image_w,
+        #                        h=scaled_image_h, type="JPEG")
+        #
+        #         # self.pdf.image(join(self.input_folder, image), x=12, y=10, w=self.W - 24, h=0, type="JPEG")
+        #         self.pdf.set_y(self.H - 16)
+        #         self.pdf.set_x(int(self.obj['photos']['from_side']))
+        #         self.pdf.multi_cell(w=self.W - int(self.obj['photos']['from_side']) * 2,
+        #                             h=int(self.obj['photos']['interline']),
+        #                             txt=str(self.obj['photos']['captions'][i]['caption']), border=0, align="L",
+        #                             fill=False)
 
-                original_image_size = PIL.Image.open(image).size
-                scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h = self.fit_image(12, 10,
-                                                                                                self.W - 24,
-                                                                                                self.H - 30,
-                                                                                                original_image_size[0],
-                                                                                                original_image_size[1])
-                self.pdf.image(join(self.input_folder, image), x=scaled_image_x, y=scaled_image_y, w=scaled_image_w,
-                               h=scaled_image_h, type="JPEG")
-
-                # self.pdf.image(join(self.input_folder, image), x=12, y=10, w=self.W - 24, h=0, type="JPEG")
-                self.pdf.set_y(self.H - 16)
-                self.pdf.set_x(int(self.obj['photos']['from_side']))
-                self.pdf.multi_cell(w=self.W - int(self.obj['photos']['from_side']) * 2,
-                                    h=int(self.obj['photos']['interline']),
-                                    txt=str(self.obj['photos']['captions'][i]['caption']), border=0, align="L",
-                                    fill=False)
-
-        if USE_RL:
-            for i, image in enumerate(self.images):
-                text_x, caption = self.rl_centered_image(join(self.input_folder, image),
-                                                         int(self.obj['photos']['from_side']),
-                                                         int(self.obj['photos']['from_top']))
-                self.rl_text(caption, 'font_text', 0, self.obj['photos']['size'],
-                             self.obj['photos']['interline'], self.obj['photos']['from_side'],
-                             (text_x + self.obj['photos']['interline'] / 1.))
-                self.c.showPage()
+        for i, image in enumerate(self.images):
+            text_x, caption = self.rl_centered_image(join(self.input_folder, image),
+                                                     int(self.obj['photos']['from_side']),
+                                                     int(self.obj['photos']['from_top']))
+            self.rl_text(caption, 'font_text', 0, self.obj['photos']['size'],
+                         self.obj['photos']['interline'], self.obj['photos']['from_side'],
+                         (text_x + self.obj['photos']['interline'] / 1.))
+            self.c.showPage()
 
     def grid_page(self):
         r = int(self.obj['contactsheet']['rows'])
@@ -375,6 +370,8 @@ class FotoPDF:
         m_oriz = self.obj["contactsheet"]["horizontal_margin"]
         m_vert = self.obj["contactsheet"]["vertical_margin"]
         m_lat = self.obj["contactsheet"]["lateral_margin"]
+
+
 
         # Parto dalle colonne e vedo se l'altezza sta nei margini
         w = (self.W - 2 * m_lat - (c - 1) * m_oriz) / c
@@ -388,107 +385,100 @@ class FotoPDF:
             if total_w > self.W:
                 print("Non può essere.")
 
-        if USE_FPDF:
-            self.pdf.add_page()
-            if bool(self.obj['contactsheet']['black_background']):
-                self.pdf.set_fill_color(0, 0, 0)
-                self.pdf.cell(0, self.H, "", 0, 1, align="C", fill=True)
-            for i, image in enumerate(self.images):
-                self.pdf.image(join(self.input_folder, image),
-                               x=(self.W - (c * w + (c - 1) * m_oriz)) / 2 + (i % c) * (w + m_oriz),
-                               y=(self.H - (r * h + (r - 1) * m_vert)) / 2 + int(i / c) * (h + m_vert),
-                               w=w, h=0)
-        if USE_RL:
-            if bool(self.obj['contactsheet']['black_background']):
-                self.c.setFillColorRGB(0, 0, 0)
-                self.c.rect(0, 0, self.W, self.H, fill=1)
-            for i, image in enumerate(self.images):
-                self.c.drawImage(join(self.input_folder, image),
-                                 x=(self.W - (c * w + (c - 1) * m_oriz)) / 2 + (i % c) * (w + m_oriz),
-                                 y=self.H - h - ((self.H - (r * h + (r - 1) * m_vert)) / 2 + int(i / c) * (h + m_vert)),
-                                 width=w,
-                                 height=h,
-                                 mask=None)
-            self.c.showPage()
+        # if USE_FPDF:
+        #     self.pdf.add_page()
+        #     if bool(self.obj['contactsheet']['black_background']):
+        #         self.pdf.set_fill_color(0, 0, 0)
+        #         self.pdf.cell(0, self.H, "", 0, 1, align="C", fill=True)
+        #     for i, image in enumerate(self.images):
+        #         self.pdf.image(join(self.input_folder, image),
+        #                        x=(self.W - (c * w + (c - 1) * m_oriz)) / 2 + (i % c) * (w + m_oriz),
+        #                        y=(self.H - (r * h + (r - 1) * m_vert)) / 2 + int(i / c) * (h + m_vert),
+        #                        w=w, h=0)
+
+        if bool(self.obj['contactsheet']['black_background']):
+            self.c.setFillColorRGB(0, 0, 0)
+            self.c.rect(0, 0, self.W, self.H, fill=1)
+        for i, image in enumerate(self.images):
+            self.c.drawImage(join(self.input_folder, image),
+                             x=(self.W - (c * w + (c - 1) * m_oriz)) / 2 + (i % c) * (w + m_oriz),
+                             y=self.H - h - ((self.H - (r * h + (r - 1) * m_vert)) / 2 + int(i / c) * (h + m_vert)),
+                             width=w,
+                             height=h,
+                             mask=None)
+        self.c.showPage()
 
     def final_page(self):
-        if USE_FPDF:
-            self.pdf.add_page()
+        # if USE_FPDF:
+        #     self.pdf.add_page()
 
         if bool(self.obj['final']['author']['show']):
-            if USE_FPDF:
-                self.fpdf_centered_text(self.obj['document']['author'],
-                                        'font_text',
-                                        self.obj['final']['author']['size'],
-                                        self.obj['final']['author']['from_top'], black=True)
-            if USE_RL:
-                self.rl_single_line_centered_text(self.obj['document']['author'],
-                                                  'font_text',
-                                                  self.obj['final']['author']['size'],
-                                                  self.obj['final']['author']['from_top'],
-                                                  True)
+            # if USE_FPDF:
+            #     self.fpdf_centered_text(self.obj['document']['author'],
+            #                             'font_text',
+            #                             self.obj['final']['author']['size'],
+            #                             self.obj['final']['author']['from_top'], black=True)
+            self.rl_single_line_centered_text(self.obj['document']['author'],
+                                              'font_text',
+                                              self.obj['final']['author']['size'],
+                                              self.obj['final']['author']['from_top'],
+                                              True)
 
         if bool(self.obj['final']['website']['show']):
-            if USE_FPDF:
-                self.fpdf_centered_text(self.obj['final']['website']['string'],
-                                        'font_text',
-                                        self.obj['final']['website']['size'],
-                                        self.obj['final']['website']['from_top'], black=True)
-            if USE_RL:
-                self.rl_single_line_centered_text(self.obj['final']['website']['string'],
-                                                  'font_text',
-                                                  self.obj['final']['website']['size'],
-                                                  self.obj['final']['website']['from_top'],
-                                                  True)
+            # if USE_FPDF:
+            #     self.fpdf_centered_text(self.obj['final']['website']['string'],
+            #                             'font_text',
+            #                             self.obj['final']['website']['size'],
+            #                             self.obj['final']['website']['from_top'], black=True)
+            self.rl_single_line_centered_text(self.obj['final']['website']['string'],
+                                              'font_text',
+                                              self.obj['final']['website']['size'],
+                                              self.obj['final']['website']['from_top'],
+                                              True)
 
         if bool(self.obj['final']['email']['show']):
-            if USE_FPDF:
-                self.fpdf_centered_text(self.obj['final']['email']['string'],
-                                        'font_text',
-                                        self.obj['final']['email']['size'],
-                                        self.obj['final']['email']['from_top'], black=True)
-            if USE_RL:
-                self.rl_single_line_centered_text(self.obj['final']['email']['string'],
-                                                  'font_text',
-                                                  self.obj['final']['email']['size'],
-                                                  self.obj['final']['email']['from_top'],
-                                                  True)
+            # if USE_FPDF:
+            #     self.fpdf_centered_text(self.obj['final']['email']['string'],
+            #                             'font_text',
+            #                             self.obj['final']['email']['size'],
+            #                             self.obj['final']['email']['from_top'], black=True)
+            self.rl_single_line_centered_text(self.obj['final']['email']['string'],
+                                              'font_text',
+                                              self.obj['final']['email']['size'],
+                                              self.obj['final']['email']['from_top'],
+                                              True)
 
         if bool(self.obj['final']['phone']['show']):
-            if USE_FPDF:
-                self.fpdf_centered_text(self.obj['final']['phone']['string'],
-                                        'font_text',
-                                        self.obj['final']['phone']['size'],
-                                        self.obj['final']['phone']['from_top'], black=True)
-            if USE_RL:
-                self.rl_single_line_centered_text(self.obj['final']['phone']['string'],
-                                                  'font_text',
-                                                  self.obj['final']['phone']['size'],
-                                                  self.obj['final']['phone']['from_top'],
-                                                  True)
+            # if USE_FPDF:
+            #     self.fpdf_centered_text(self.obj['final']['phone']['string'],
+            #                             'font_text',
+            #                             self.obj['final']['phone']['size'],
+            #                             self.obj['final']['phone']['from_top'], black=True)
+            self.rl_single_line_centered_text(self.obj['final']['phone']['string'],
+                                              'font_text',
+                                              self.obj['final']['phone']['size'],
+                                              self.obj['final']['phone']['from_top'],
+                                              True)
 
         if bool(self.obj['final']['disclaimer']['show']):
-            if USE_FPDF:
-                self.fpdf_centered_text(self.obj['final']['disclaimer']['string'],
-                                        'font_text',
-                                        self.obj['final']['disclaimer']['size'],
-                                        self.obj['final']['disclaimer']['from_top'], black=True)
-            if USE_RL:
-                self.rl_single_line_centered_text(self.obj['final']['disclaimer']['string'],
-                                                  'font_text',
-                                                  self.obj['final']['disclaimer']['size'],
-                                                  self.obj['final']['disclaimer']['from_top'],
-                                                  True)
+            # if USE_FPDF:
+            #     self.fpdf_centered_text(self.obj['final']['disclaimer']['string'],
+            #                             'font_text',
+            #                             self.obj['final']['disclaimer']['size'],
+            #                             self.obj['final']['disclaimer']['from_top'], black=True)
+            self.rl_single_line_centered_text(self.obj['final']['disclaimer']['string'],
+                                              'font_text',
+                                              self.obj['final']['disclaimer']['size'],
+                                              self.obj['final']['disclaimer']['from_top'],
+                                              True)
 
-        if USE_RL:
-            self.c.showPage()
+        self.c.showPage()
 
     def save_pdf(self):
         # Salva
-        if USE_FPDF:
-            self.pdf.output(self.abs_output_filename, "F")
-        if USE_RL:
-            self.c.save()
+        # if USE_FPDF:
+        #     self.pdf.output(self.abs_output_filename, "F")
+        self.c.save()
         self.message_on_header_widget("Created ({:.1f}MB)!".format(
             getsize(self.abs_output_filename) / 1000000.))
         self.message_on_detail_widget("Drag another folder to create a new one.")
