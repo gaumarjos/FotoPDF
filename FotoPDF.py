@@ -114,6 +114,24 @@ class FotoPDF:
             else:
                 self.detail_widget.setText(text)
 
+    def fit_image(self, rect_x, rect_y, rect_w, rect_h, image_w, image_h):
+        # Determine whether the limiting factor will be the width or the height
+        w_ratio = rect_w / image_w
+        if w_ratio * image_h <= rect_h:
+            # The width is the limiting factor
+            scaled_image_w = rect_w
+            scaled_image_h = image_h * w_ratio
+            scaled_image_x = (rect_w - scaled_image_w) / 2. + rect_x
+            scaled_image_y = (rect_h - scaled_image_h) / 2. + rect_y
+        else:
+            # The height is the limiting factor
+            h_ratio = rect_h / image_h
+            scaled_image_w = image_w * h_ratio
+            scaled_image_h = rect_h
+            scaled_image_x = (rect_w - scaled_image_w) / 2. + rect_x
+            scaled_image_y = (rect_h - scaled_image_h) / 2. + rect_y
+        return scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h
+
     def fpdf_centered_text(self, text, font, size, y, black=True):
         self.pdf.set_y(y)
         self.pdf.set_font(font, '', size)
@@ -171,21 +189,19 @@ class FotoPDF:
 
         pil_image = PIL.Image.open(image)
         original_image_size = pil_image.size
-        wanted_width = self.W - from_side * 2
-        ratio = wanted_width / original_image_size[0]
-        wanted_height = original_image_size[1] * ratio
+        scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h = self.fit_image(from_side,
+                                                                                        50,
+                                                                                        self.W - from_side * 2,
+                                                                                        self.H - from_top - 50,
+                                                                                        original_image_size[0],
+                                                                                        original_image_size[1])
         self.c.drawImage(image,
-                         x=from_side,
-                         y=self.H - from_top - wanted_height,
-                         width=wanted_width,
-                         height=wanted_height,
+                         x=scaled_image_x,
+                         y=scaled_image_y,
+                         width=scaled_image_w,
+                         height=scaled_image_h,
                          mask=None)
-        # Alternative solution (to be used only if used also in the grid,
-        # otherwise the images are not recognised as the same and saved twice in the file.
-        # im = Image(image, width=wanted_width, height=wanted_height)
-        # im.hAlign = 'CENTER'
-        # im.drawOn(c, from_side, page_height - from_side - wanted_height)
-        return (from_top + wanted_height), caption
+        return (from_top + scaled_image_h), caption
 
     def inizialize_pdf(self):
         # In any case, write to drag folder here
@@ -325,7 +341,17 @@ class FotoPDF:
             self.pdf.set_font_size(int(self.obj['photos']['size']))
             for i, image in enumerate(self.images):
                 self.pdf.add_page()
-                self.pdf.image(join(self.input_folder, image), x=12, y=10, w=self.W - 24, h=0, type="JPEG")
+
+                original_image_size = PIL.Image.open(image).size
+                scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h = self.fit_image(12, 10,
+                                                                                                self.W - 24,
+                                                                                                self.H - 30,
+                                                                                                original_image_size[0],
+                                                                                                original_image_size[1])
+                self.pdf.image(join(self.input_folder, image), x=scaled_image_x, y=scaled_image_y, w=scaled_image_w,
+                               h=scaled_image_h, type="JPEG")
+
+                # self.pdf.image(join(self.input_folder, image), x=12, y=10, w=self.W - 24, h=0, type="JPEG")
                 self.pdf.set_y(self.H - 16)
                 self.pdf.set_x(int(self.obj['photos']['from_side']))
                 self.pdf.multi_cell(w=self.W - int(self.obj['photos']['from_side']) * 2,
@@ -521,7 +547,7 @@ class Highlighter(QSyntaxHighlighter):
         self.infoFormat.setBackground(Qt.green)
         self.warningFormat = QTextCharFormat()
         self.warningFormat.setForeground(Qt.black)
-        #self.warningFormat.setBackground(Qt.yellow)
+        # self.warningFormat.setBackground(Qt.yellow)
         self.warningFormat.setBackground(QColor(MACOSYELLOW[0], MACOSYELLOW[1], MACOSYELLOW[2]))
         self.errorFormat = QTextCharFormat()
         self.errorFormat.setForeground(Qt.white)
@@ -564,7 +590,9 @@ class main_gui():
         font = self.header_widget.font()
         font.setPointSize(32)
         self.header_widget.setFont(font)
-        self.header_widget.setStyleSheet("background-color: rgb{}; color: rgb(255,255,255);border : 5px solid rgb{};".format(str(MACOSYELLOW), str(MACOSDARK)))
+        self.header_widget.setStyleSheet(
+            "background-color: rgb{}; color: rgb(255,255,255);border : 5px solid rgb{};".format(str(MACOSYELLOW),
+                                                                                                str(MACOSDARK)))
 
         self.win.show()
         sys.exit(self.app.exec_())
