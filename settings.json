@@ -48,8 +48,9 @@
     "from_top": 12,
     "interline": 6
   },
-  "contactsheet": {
+  "grid": {
     "black_background": 0,
+    "image_ratio": 1.0,
     "rows": 4,
     "columns": 6,
     "horizontal_margin": 14,
