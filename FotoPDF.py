@@ -8,6 +8,7 @@
 # https://blog.aaronhktan.com/posts/2018/05/14/pyqt5-pyinstaller-executable
 # https://github.com/pyinstaller/pyinstaller/issues/5107
 # http://www.marinamele.com/from-a-python-script-to-a-portable-mac-application-with-py2app
+# https://py2app.readthedocs.io/_/downloads/en/stable/pdf/
 
 import os
 from os import listdir

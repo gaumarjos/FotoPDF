@@ -10,7 +10,18 @@ from setuptools import setup
 APP = ['FotoPDF.py']
 DATA_FILES = ['FotoPDF.png', 'font_default.ttf']
 OPTIONS = {
-    'packages': ['reportlab', 'PyQt5', 'os', 'json'],
+    'packages': ['reportlab'],
+    'argv_emulation': True,
+    'strip': True,
+    'includes': ['PyQt5.QtCore', 'PyQt5.QtGui', 'PyQt5.QtWidgets'],
+    'excludes': ['PyQt5.QtDesigner', 'PyQt5.QtNetwork', 'PyQt5.QtOpenGL', 'PyQt5.QtScript', 'PyQt5.QtSql',
+                 'PyQt5.QtTest', 'PyQt5.QtXml', 'PyQt5.QtHelp', 'QtHelp', 'QtSerialPort', 'QtHelp.so',
+                 'PyQt5.QtHelp.so', 'PyQt5.QtBluetooth', 'PyQt5.QtDBus', 'PyQt5.QtLocation', 'PyQt5.QtMacExtras',
+                 'PyQt5.QtMultimedia', 'PyQt5.QtMultimediaWidgets', 'PyQt5.QtNfc', 'PyQt5.QtPositioning',
+                 'PyQt5.QtPrintSupport', 'PyQt5.QtQml', 'PyQt5.QtQuick', 'PyQt5.QtQuick3D',
+                 'PyQt5.QtQuickWidgets', 'PyQt5.QtRemoteObjects', 'PyQt5.QtSensors', 'PyQt5.QtSvg',
+                 'PyQt5.QtTextToSpeech', 'PyQt5.QtWebChannel', 'PyQt5.QtWebSockets',
+                 'PyQt5.QtXmlPatterns'],
     'iconfile': '/Users/ste/PycharmProjects/FotoPDF/FotoPDF.icns'
 }
 
@@ -20,3 +31,7 @@ setup(
     options={'py2app': OPTIONS},
     setup_requires=['py2app'],
 )
+
+# Packages to be added to the script in case something is not building correctly
+# 'PyQt5', 'os', 'json'
+# 'includes': ['reportlab.pdfgen', 'reportlab.platypus', 'reportlab.lib', 'reportlab.rl_config', 'reportlab.pdfbase'],
