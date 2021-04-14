@@ -1,15 +1,19 @@
 {
   "document": {
-    "title": "Casari e Bergamini <br/>col turbante",
+    "title": "Title",
     "author": "Stefano Salati",
-    "suffix": "Stretta",
+    "website": "www.stefanosalati.com",
+    "email": "...",
+    "phone": "...",
+    "disclaimer": "",
+    "suffix": "",
     "a4": 1,
     "width": 1024,
     "height": 768
   },
   "fonts": {
     "default": "Helvetica",
-    "title": "/System/Library/Fonts/Supplemental/PlantagenetCherokee.ttf",
+    "title": "font_default.ttf",
     "author": "font_default.ttf",
     "text": "font_default.ttf"
   },
@@ -18,23 +22,23 @@
     "use_image": 7,
     "black_background": 1,
     "title": {
-      "size": 64,
-      "from_top": 12,
+      "size": 54,
+      "from_top": 26,
       "from_side": 70,
       "interline": 8,
       "black_text": 0,
       "_comment": "4/3: from_top 30, A4: from_top 20"
     },
     "author": {
-      "size": 36,
-      "from_top": 580,
+      "size": 26,
+      "from_top": 576,
       "black_text": 0,
       "_comment": "4/3: from_top 740, A4: from_top 580"
     }
   },
   "description": {
     "show": 1,
-    "string": "In Emilia esiste dagli anni '90 una comunità indiana di religione sikh molto numerosa, perfettamente integrata e attiva in tutti i settori. Tanti membri di questa comunità lavorano nelle centinaia di aziende agricole che punteggiano la regione, occupandosi sia della cura delle vacche sia della produzione di Parmigiano Reggiano. Il loro contributo è essenziale per l’economia regionale: più del 60% degli addetti è indiano e il settore sviluppa un giro d’affari di oltre 1,4 mld alla produzione.\nIn alcune aziende lavorano quasi esclusivamente sikh, che svolgono tutte le attività: dal bergamino — a stretto contatto con gli animali — al casaro responsabile dell'intera produzione. Qualsiasi sia la mansione, il lavoro nelle stalle e nei caseifici è molto duro: non solo per la fatica fisica, ma soprattutto perché è richiesta una presenza costante. I fine settimana non esistono, solo un giorno di riposo a settimana. Nei caseifici si lavora principalmente al mattino, mentre nel resto della giornata si girano le forme e si lavano le pezze di tessuto utilizzate per estrarle dalle caldaie. Nelle stalle invece la giornata è estremamente variabile ma sempre spezzata in due turni: quello del mattino inizia prestissimo alle 3 e mezza e continua fino alle 9 per poi ricominciare a metà pomeriggio fino a sera. Non è difficile immaginare come per alcune persone il lavoro possa facilmente diventare una “prigione dolce” dove vita e lavoro sono buoni, ma da cui non ci si può allontanare.\nIl lavoro descrive un caseificio e due stalle, mandati avanti col significativo contributo dei membri di questa comunità. Parmjit Saini si è trasferito dall’India nel 2000 e ora lavora con le vacche rosse reggiane — una razza che produce meno latte ma molto pregiato — a Roncadella (RE). Taljit Singh ha iniziato a lavorare in Italia a 26 anni e ora, dopo 20, è il casaro a Gattatico (RE), assistito dal cognato Mandip. Infine, Satnam e Pal, bergamini e mungitori nella stessa azienda.\nCon i colori ho voluto rappresentare le sensazioni e i contrasti che ho provato ad essere lì: a casa tranquillità e dimensione privata, al lavoro movimento, freddo fuori e umidità appiccicosa nelle fosse di mungitura e davanti alle caldaie e, più evidenti, le forti luci artificiali che contrastano col buio fuori.",
+    "string": "...",
     "size": 14,
     "from_side": 80,
     "from_top": 0,
@@ -43,16 +47,16 @@
     "_comment2": "4/3: size 16, from_side 100, A4: size 14, from_side 80"
   },
   "photos": {
-    "size": 12,
     "from_side": 24,
     "from_top": 12,
+    "size": 12,
     "interline": 6
   },
   "grid": {
     "black_background": 0,
     "image_ratio": 1.0,
-    "rows": 4,
-    "columns": 6,
+    "rows": 5,
+    "columns": 7,
     "horizontal_margin": 14,
     "vertical_margin": 14,
     "lateral_margin": 28
@@ -67,28 +71,24 @@
     },
     "website": {
       "show": 0,
-      "string": "www.stefanosalati.com",
       "size": 20,
       "from_top": 300,
       "_comment": "4/3: 400, A4: 300"
     },
     "email": {
       "show": 1,
-      "string": "ste.salati@protonmail.com",
       "size": 20,
       "from_top": 320,
       "_comment": "4/3: 400, A4: 300"
     },
     "phone": {
       "show": 1,
-      "string": "3481011471",
       "size": 20,
       "from_top": 350,
       "_comment": "4/3: 430, A4: 350"
     },
     "disclaimer": {
       "show": 1,
-      "string": "Masterclass di Reportage con FotoImage di Fulvio Bugani, 2020-2021.",
       "size": 20,
       "from_top": 560,
       "_comment": "4/3: 700, A4: 560"
