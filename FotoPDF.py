@@ -12,6 +12,7 @@
 
 
 import os
+import shutil
 from os import listdir
 from os.path import join, getsize, isfile, dirname, abspath, isdir
 # from fpdf import FPDF
@@ -52,10 +53,10 @@ MACOSDARK = (46, 46, 46)
 
 
 # Translate asset paths to useable format for PyInstaller
-def resource_path(relative_path):
-    if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, relative_path)
-    return os.path.join(os.path.abspath('.'), relative_path)
+# def resource_path(relative_path):
+#     if hasattr(sys, '_MEIPASS'):
+#         return os.path.join(sys._MEIPASS, relative_path)
+#     return os.path.join(os.path.abspath('.'), relative_path)
 
 
 def atoi(text):
@@ -98,7 +99,7 @@ class FotoPDF:
         self.c = None
         self.images = []
 
-    def message_on_header_widget(self, text, append=True):
+    def message_on_header_widget(self, text):
         if self.header_widget is None:
             print(text)
         else:
@@ -113,7 +114,8 @@ class FotoPDF:
             else:
                 self.detail_widget.setText(text)
 
-    def fit_image(self, rect_x, rect_y, rect_w, rect_h, image_w, image_h):
+    @staticmethod
+    def fit_image(rect_x, rect_y, rect_w, rect_h, image_w, image_h):
         # Determine whether the limiting factor will be the width or the height
         w_ratio = rect_w / image_w
         if w_ratio * image_h <= rect_h:
@@ -204,15 +206,19 @@ class FotoPDF:
     def inizialize_pdf(self):
         # In any case, write to drag folder here
         self.message_on_header_widget("Drag folder here")
+        self.message_on_detail_widget("", append=False)
 
         # Lettura JSON
         try:
             with open(join(self.input_folder, 'settings.json'), 'r', encoding="utf8") as myjson:
                 data = myjson.read()
-            self.obj = json.loads(data)
         except:
-            self.message_on_detail_widget("Error: Cannot find settings.json in folder.", append=False)
-            return False
+            self.message_on_detail_widget("Warning: Cannot find settings.json in folder. Creating a default one that will need to be customized.")
+            shutil.copyfile('settings.json', join(self.input_folder, 'settings.json'))
+            with open(join(self.input_folder, 'settings.json'), 'r', encoding="utf8") as myjson:
+                data = myjson.read()
+        self.obj = json.loads(data)
+
 
         # Creazione file e impostazioni generali
         if self.obj["document"]["a4"]:
@@ -278,7 +284,7 @@ class FotoPDF:
         if len(self.images) == 0:
             self.message_on_detail_widget("Error: No image found in folder.", append=False)
             return False
-        self.message_on_detail_widget("Creating PDF with images in \"{}\".".format(self.input_folder), append=False)
+        self.message_on_detail_widget("Creating PDF with images in \"{}\".".format(self.input_folder))
 
         return True
 
@@ -305,11 +311,16 @@ class FotoPDF:
                          (self.W - original_image_size[0]) / 2,
                          0,
                          width=None, height=self.H, preserveAspectRatio=True)
-        self.rl_text(self.obj['document']['title'], 'font_title', 1, int(self.obj['cover']['title']['size']),
-                     int(self.obj['cover']['title']['interline']), int(self.obj['cover']['title']['from_side']),
+        self.rl_text(self.obj['document']['title'],
+                     'font_title',
+                     1,
+                     int(self.obj['cover']['title']['size']),
+                     int(self.obj['cover']['title']['interline']),
+                     int(self.obj['cover']['title']['from_side']),
                      int(self.obj['cover']['title']['from_top']),
                      black=self.obj["cover"]["title"]["black_text"])
-        self.rl_single_line_centered_text(self.obj["document"]["author"], 'font_author',
+        self.rl_single_line_centered_text(self.obj["document"]["author"],
+                                          'font_author',
                                           int(self.obj['cover']['author']['size']),
                                           int(self.obj['cover']['author']['from_top']),
                                           self.obj["cover"]["author"]["black_text"])
@@ -443,7 +454,7 @@ class FotoPDF:
             #                             'font_text',
             #                             self.obj['final']['website']['size'],
             #                             self.obj['final']['website']['from_top'], black=True)
-            self.rl_single_line_centered_text(self.obj['final']['website']['string'],
+            self.rl_single_line_centered_text(self.obj['document']['website'],
                                               'font_text',
                                               self.obj['final']['website']['size'],
                                               self.obj['final']['website']['from_top'],
@@ -455,7 +466,7 @@ class FotoPDF:
             #                             'font_text',
             #                             self.obj['final']['email']['size'],
             #                             self.obj['final']['email']['from_top'], black=True)
-            self.rl_single_line_centered_text(self.obj['final']['email']['string'],
+            self.rl_single_line_centered_text(self.obj['document']['email'],
                                               'font_text',
                                               self.obj['final']['email']['size'],
                                               self.obj['final']['email']['from_top'],
@@ -467,7 +478,7 @@ class FotoPDF:
             #                             'font_text',
             #                             self.obj['final']['phone']['size'],
             #                             self.obj['final']['phone']['from_top'], black=True)
-            self.rl_single_line_centered_text(self.obj['final']['phone']['string'],
+            self.rl_single_line_centered_text(self.obj['document']['phone'],
                                               'font_text',
                                               self.obj['final']['phone']['size'],
                                               self.obj['final']['phone']['from_top'],
@@ -479,7 +490,7 @@ class FotoPDF:
             #                             'font_text',
             #                             self.obj['final']['disclaimer']['size'],
             #                             self.obj['final']['disclaimer']['from_top'], black=True)
-            self.rl_single_line_centered_text(self.obj['final']['disclaimer']['string'],
+            self.rl_single_line_centered_text(self.obj['document']['disclaimer'],
                                               'font_text',
                                               self.obj['final']['disclaimer']['size'],
                                               self.obj['final']['disclaimer']['from_top'],
@@ -567,7 +578,7 @@ class Highlighter(QSyntaxHighlighter):
             self.setFormat(0, len(text), self.errorFormat)
 
 
-class main_gui():
+class MainGUI:
     def __init__(self):
         self.app = QApplication(sys.argv)
         self.win = QMainWindow()
@@ -603,7 +614,7 @@ class main_gui():
 
 if __name__ == "__main__":
     if GUI:
-        main_gui()
+        MainGUI()
     else:
         mypdf = FotoPDF(sys.argv[1:], None)
         mypdf.create_pdf()

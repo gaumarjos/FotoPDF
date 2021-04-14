@@ -8,7 +8,7 @@ Usage:
 from setuptools import setup
 
 APP = ['FotoPDF.py']
-DATA_FILES = ['FotoPDF.png', 'font_default.ttf']
+DATA_FILES = ['FotoPDF.png', 'font_default.ttf', "settings.json"]
 OPTIONS = {
     'packages': ['reportlab'],
     'argv_emulation': True,
