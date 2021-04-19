@@ -39,6 +39,7 @@ from PyQt5.QtCore import Qt
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
 # Constants
+DEBUG = True
 GUI = True
 # USE_FPDF = False
 # USE_RL = True
@@ -213,12 +214,12 @@ class FotoPDF:
             with open(join(self.input_folder, 'settings.json'), 'r', encoding="utf8") as myjson:
                 data = myjson.read()
         except:
-            self.message_on_detail_widget("Warning: Cannot find settings.json in folder. Creating a default one that will need to be customized.")
+            self.message_on_detail_widget(
+                "Warning: Cannot find settings.json in folder. Creating a default one that will need to be customized.")
             shutil.copyfile('settings.json', join(self.input_folder, 'settings.json'))
             with open(join(self.input_folder, 'settings.json'), 'r', encoding="utf8") as myjson:
                 data = myjson.read()
         self.obj = json.loads(data)
-
 
         # Creazione file e impostazioni generali
         if self.obj["document"]["a4"]:
@@ -578,41 +579,55 @@ class Highlighter(QSyntaxHighlighter):
             self.setFormat(0, len(text), self.errorFormat)
 
 
-class MainGUI:
-    def __init__(self):
-        self.app = QApplication(sys.argv)
-        self.win = QMainWindow()
-        self.win.setGeometry(200, 200, 300, 450)
-        self.win.setFixedSize(300, 450)
-        self.win.setWindowTitle("FotoPDF")
-        self.app.setWindowIcon(QIcon('FotoPDF.png'))
+def MainGUI():
+    if DEBUG:
+        print("Lo fa")
+    # app = QApplication(sys.argv)
+    app = QApplication([])
+    if DEBUG:
+        print("Non lo fa")
+    win = QMainWindow()
+    win.setGeometry(200, 200, 300, 450)
+    win.setFixedSize(300, 450)
+    win.setWindowTitle("FotoPDF")
+    app.setWindowIcon(QIcon('FotoPDF.png'))
 
-        self.detail_widget = QTextEdit(self.win)
-        self.detail_widget.setAlignment(Qt.AlignCenter)
-        highlighter = Highlighter(self.detail_widget.document())
-        self.detail_widget.setReadOnly(True)
-        self.detail_widget.setText("Tip: it works with both a folder or any file in that folder.")
-        self.detail_widget.setGeometry(0, 300, 300, 150)
-        self.detail_widget.setStyleSheet("background-color: rgb{}; color: rgb(255,255,255);".format(str(MACOSDARK)))
+    detail_widget = QTextEdit(win)
+    detail_widget.setAlignment(Qt.AlignCenter)
+    highlighter = Highlighter(detail_widget.document())
+    detail_widget.setReadOnly(True)
+    detail_widget.setText("Tip: it works with both a folder or any file in that folder.")
+    detail_widget.setGeometry(0, 300, 300, 150)
+    detail_widget.setStyleSheet("background-color: rgb{}; color: rgb(255,255,255);".format(str(MACOSDARK)))
 
-        # Create widget to accept drag&drop
-        self.header_widget = FileEdit(self.win, self.detail_widget)
-        self.header_widget.setAlignment(Qt.AlignCenter)
-        self.header_widget.setReadOnly(True)
-        self.header_widget.setText("Drag folder here")
-        self.header_widget.setGeometry(0, 0, 300, 300)
-        font = self.header_widget.font()
-        font.setPointSize(32)
-        self.header_widget.setFont(font)
-        self.header_widget.setStyleSheet(
-            "background-color: rgb{}; color: rgb(255,255,255);border : 5px solid rgb{};".format(str(MACOSYELLOW),
-                                                                                                str(MACOSDARK)))
-
-        self.win.show()
-        sys.exit(self.app.exec_())
+    # Create widget to accept drag&drop
+    header_widget = FileEdit(win, detail_widget)
+    header_widget.setAlignment(Qt.AlignCenter)
+    header_widget.setReadOnly(True)
+    header_widget.setText("Drag folder here")
+    header_widget.setGeometry(0, 0, 300, 300)
+    font = header_widget.font()
+    font.setPointSize(32)
+    header_widget.setFont(font)
+    header_widget.setStyleSheet(
+        "background-color: rgb{}; color: rgb(255,255,255);border : 5px solid rgb{};".format(str(MACOSYELLOW),
+                                                                                            str(MACOSDARK)))
+    win.show()
+    sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
+    if DEBUG:
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+            print("Running in a Pyinstaller bundle.")
+        else:
+            print("Running in a normal Python process.")
+
+        for a in sys.argv:
+            print("sys.argv[]: {}".format(a))
+        print(sys.executable)
+        print(os.getcwd())
+
     if GUI:
         MainGUI()
     else:
