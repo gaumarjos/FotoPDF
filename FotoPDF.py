@@ -33,8 +33,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit  # Q
 from PyQt5.QtGui import QIcon, QSyntaxHighlighter, QTextCharFormat, QColor
 from PyQt5.QtCore import Qt
 
-# import getopt
-# from pdfrw import PageMerge, PdfReader, PdfWriter
+# from pdfrw import PdfReader, PdfWriter
 
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
@@ -508,6 +507,14 @@ class FotoPDF:
             getsize(self.abs_output_filename) / 1000000.))
         self.message_on_detail_widget("Drag another folder to create a new one.")
 
+    # def resave_pdf(self):
+    #     x = PdfReader(self.abs_output_filename)
+    #     y = PdfWriter()
+    #     for page in x.pages:
+    #         y.addpage(page)
+    #     y.write(self.abs_output_filename + '_resaved.pdf')
+    #     print(len(x.pages))
+
     def create_pdf(self):
         if self.inizialize_pdf():
             if bool(self.obj['cover']['show']):
@@ -519,6 +526,7 @@ class FotoPDF:
             if self.obj['final']['show']:
                 self.final_page()
             self.save_pdf()
+            # self.resave_pdf()
 
 
 class FileEdit(QLineEdit):
