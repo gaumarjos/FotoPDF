@@ -21,7 +21,8 @@ OPTIONS = {
                  'PyQt5.QtPrintSupport', 'PyQt5.QtQml', 'PyQt5.QtQuick', 'PyQt5.QtQuick3D',
                  'PyQt5.QtQuickWidgets', 'PyQt5.QtRemoteObjects', 'PyQt5.QtSensors', 'PyQt5.QtSvg',
                  'PyQt5.QtTextToSpeech', 'PyQt5.QtWebChannel', 'PyQt5.QtWebSockets',
-                 'PyQt5.QtXmlPatterns'],
+                 'PyQt5.QtXmlPatterns',
+                 'reportlab.graphics'],
     'iconfile': '/Users/ste/PycharmProjects/FotoPDF/FotoPDF.icns'
 }
 
