@@ -6,8 +6,8 @@ pyinstaller --noconfirm --log-level=ERROR \
     --windowed \
     --name FotoPDF \
     --debug imports \
-    --paths ~/PycharmProjects/FotoPDF/venv2/lib/python3.9/site-packages/ \
     --paths ~/PycharmProjects/FotoPDF/venv2/ \
+    --paths ~/PycharmProjects/FotoPDF/venv2/lib/python3.9/site-packages/ \
     --paths ~/PycharmProjects/FotoPDF/venv2/lib/python3.9/site-packages/PyQt5/ \
     --add-data font_default.ttf:. \
     --add-data FotoPDF.png:. \
@@ -17,4 +17,4 @@ pyinstaller --noconfirm --log-level=ERROR \
     --hidden-import PyQt5.QtWidgets \
     --hidden-import PyQt5.QtGui \
     --hidden-import PyQt5.QtCore \
-    FotoPDF.py
+    simple.py
