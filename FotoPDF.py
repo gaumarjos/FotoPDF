@@ -32,6 +32,10 @@ from reportlab.pdfbase.ttfonts import TTFont
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit  # QLabel, QMessageBox, QLineEdit
 from PyQt5.QtGui import QIcon, QSyntaxHighlighter, QTextCharFormat, QColor
 from PyQt5.QtCore import Qt
+# from pdfminer.pdfparser import PDFParser
+# from pdfminer.pdfdocument import PDFDocument
+# import PyPDF2
+# from pathlib import Path
 
 # from pdfrw import PdfReader, PdfWriter
 
@@ -507,13 +511,37 @@ class FotoPDF:
             getsize(self.abs_output_filename) / 1000000.))
         self.message_on_detail_widget("Drag another folder to create a new one.")
 
-    # def resave_pdf(self):
-    #     x = PdfReader(self.abs_output_filename)
-    #     y = PdfWriter()
-    #     for page in x.pages:
-    #         y.addpage(page)
-    #     y.write(self.abs_output_filename + '_resaved.pdf')
-    #     print(len(x.pages))
+        # Leggi metadata
+        # fp = open(self.abs_output_filename, 'rb')
+        # parser = PDFParser(fp)
+        # doc = PDFDocument(parser)
+        # print(doc.info)  # The "Info" metadata
+
+    def resave_pdf(self):
+        pass
+        # Useless
+        #     x = PdfReader(self.abs_output_filename)
+        #     y = PdfWriter()
+        #     for page in x.pages:
+        #         y.addpage(page)
+        #     y.write(self.abs_output_filename + '_resaved.pdf')
+        #     print(len(x.pages))
+
+        # Also useless
+        # pdf_reader = PyPDF2.PdfFileReader(open(self.abs_output_filename, 'rb'))
+        # pdf_writer = PyPDF2.PdfFileWriter()
+
+        # Copy all in one go
+        # pdf_writer.appendPagesFromReader(pdf_reader)
+
+        # Copy each page individually
+        # for n in range(pdf_reader.numPages):
+        #     page = pdf_reader.getPage(n)
+        #     pdf_writer.addPage(page)
+
+        # Save
+        # with Path(self.abs_output_filename + '_resaved2.pdf').open(mode="wb") as output_file:
+        #     pdf_writer.write(output_file)
 
     def create_pdf(self):
         if self.inizialize_pdf():
@@ -526,7 +554,7 @@ class FotoPDF:
             if self.obj['final']['show']:
                 self.final_page()
             self.save_pdf()
-            # self.resave_pdf()
+            self.resave_pdf()
 
 
 class FileEdit(QLineEdit):
@@ -588,12 +616,8 @@ class Highlighter(QSyntaxHighlighter):
 
 
 def MainGUI():
-    if DEBUG:
-        print("Lo fa")
     # app = QApplication(sys.argv)
     app = QApplication([])
-    if DEBUG:
-        print("Non lo fa")
     win = QMainWindow()
     win.setGeometry(200, 200, 300, 450)
     win.setFixedSize(300, 450)
