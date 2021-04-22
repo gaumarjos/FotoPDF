@@ -33,12 +33,17 @@ Configuration files for Pyinstaller (`build_with_py2app.sh`) and Pyoxidizer (`py
 
 ## To do
 ### Oversaturated colors when the PDF is opened with MacOS Preview
-I'm using reportlab to generate the pdf. Sometimes, the iamges of the pdf that is generated have saturated colors when opened with MacOS Preview. When opened with, say, Google Chrome, they're just fine.
+I'm using reportlab to generate the pdf. Sometimes, the images of the pdf that is generated have saturated colors when opened with MacOS Preview.
+
+They are fine when looked in the Finder thumbnail or opened with other SW like, say, Google Chrome. It's clearly a MacOS Preview limitation but unfortunately that's the viewer most photoeditors use.
+
 I tried with images in color space RGB and two different colour profiles:
 - sRGB: images are oversaturated
 - AdobeRGB1998: images are treated fine
 
 I could not find a way to solve this in reportlab. Also interesting: if I open the file gerenated with Reportlab with MacOS Preview and export it as pdf, all colours are "fixed".
+
+I also tried using pypdf2 to open, parse page by page and resave the document but it has no effect.
 
 ### Cannot build the app with pyinstaller [link](https://stackoverflow.com/questions/67057304/pyinstaller-on-macos-bigsur-cannot-build-basic-pyqt5-app)
 The app can be built with py2app. However, the size of the resulting app is way more than what it could be.
