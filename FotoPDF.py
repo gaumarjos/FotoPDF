@@ -32,6 +32,8 @@ from reportlab.pdfbase.ttfonts import TTFont
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit  # QLabel, QMessageBox, QLineEdit
 from PyQt5.QtGui import QIcon, QSyntaxHighlighter, QTextCharFormat, QColor
 from PyQt5.QtCore import Qt
+from pikepdf import Pdf, Page, PdfImage, Name, Dictionary, Stream
+
 # import PyPDF2
 # from pathlib import Path
 
@@ -535,6 +537,88 @@ class FotoPDF:
             with Path(self.abs_output_filename + '_resaved2.pdf').open(mode="wb") as output_file:
                 pdf_writer.write(output_file)
 
+        if 0:
+            src = Pdf.open(self.abs_output_filename)
+
+            pageobj = src.pages[2]
+            s = Stream(Alternate=Name("/DeviceRGB"),
+                       Filter=Name("/FlateDecode"),
+                       Length=2612,
+                       N=3)
+            pageobj['/Resources']['/ColorSpace'] = Dictionary({'/Cs1': ["/ICCBased", s]})
+
+            # l = list(src.pages[2].images.keys())
+            # pdfimage = PdfImage(src.pages[2].images[l[0]])
+            # print(pdfimage.colorspace)
+            # rawimage = pdfimage.obj
+            # pillowimage = pdfimage.as_pil_image()
+            # pdfimage.extract_to(fileprefix='__cacca')
+            # grayscale = pillowimage.convert('L')
+            # grayscale = grayscale.resize((32, 32))
+            # rawimage.write(zlib.compress(grayscale.tobytes()), filter = )
+            # rawimage.ColorSpace = Name("/DeviceRGB")
+            # rawimage.Filter = Name("/FlateDecode")
+
+            # print(str(pageobj1))
+
+            dst = Pdf.new()
+            dst.pages.extend(src.pages)
+            dst.save(self.abs_output_filename + '_resaved.pdf',
+                     normalize_content=True,
+                     linearize=False)
+
+            # Da reportlab
+            # "/XObject": {
+            #     "/FormXob.8125de7e43ed46d9023f94eb7297f833": pikepdf.Stream(stream_dict={
+            #         "/BitsPerComponent": 8,
+            #         "/ColorSpace": "/DeviceRGB",
+            #         "/Filter": ["/ASCII85Decode", "/DCTDecode"],
+            #         "/Height": 1000,
+            #         "/Length": 475040,
+            #         "/Subtype": "/Image",
+            #         "/Type": "/XObject",
+            #         "/Width": 1500
+            #     }, data= < ... >)
+            # }
+
+            # Corretto
+            # "/Resources": {
+            # "/ColorSpace": {
+            #     "/Cs1": ["/ICCBased",
+            #
+            #              pikepdf.Stream(stream_dict={
+            #                  "/Alternate": "/DeviceRGB",
+            #                  "/Filter": "/FlateDecode",
+            #                  "/Length": 2612,
+            #                  "/N": 3
+            #              },
+            #                  data= < ... >)]
+            # },
+            # ...
+            # "/XObject": {
+            #     "/Im3": pikepdf.Stream(stream_dict={
+            #     "/BitsPerComponent": 8,
+            #     "/ColorSpace": <.get_object(6, 0) >,
+            #     "/Filter": "/DCTDecode",
+            #     "/Height": 1000,
+            #     "/Interpolate": True,
+            #     "/Length": 380302,
+            #     "/Subtype": "/Image",
+            #     "/Type": "/XObject",
+            #     "/Width": 1500
+            # }, data = < ... >)
+            # }
+
+        if 1:
+            src = Pdf.open(self.abs_output_filename)
+            seed = Pdf.open('seed.pdf')
+            seed_page = seed.pages[0]
+            dst = Pdf.new()
+            for page in src.pages:
+                page['/Resources']['/ColorSpace'] = seed_page.Resources.ColorSpace
+            dst.pages.extend(src.pages)
+            dst.save(self.abs_output_filename + '_resaved.pdf')
+
     def create_pdf(self):
         if self.inizialize_pdf():
             if bool(self.obj['cover']['show']):
@@ -678,22 +762,7 @@ if __name__ == "__main__":
 #     print(possibili_righe[max_to_min_sort_index][:4])
 #     print(possibili_colonne[max_to_min_sort_index][:4])
 #     print(aree_risultanti[max_to_min_sort_index][:4])
-
-
-# def new_content():
-#     ...
 #
-# reader = PdfReader(fdata=bytes(pdf.output()))
-#         return reader
-#
-#     ciao = new_content()
-#
-#     y = PdfWriter()
-#     for i in range(len(ciao.pages)):
-#         y.addpage(ciao.pages[i])
-#     y.write('result.pdf')
-
-
 # For more arguments, now unused
 # try:
 #     opts, args = getopt.getopt(argv, "i:",
