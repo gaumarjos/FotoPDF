@@ -1,17 +1,21 @@
 # FotoPDF
 
-## GUI (default)
+## GUI
 <img src="docs/app_image.png" alt="The app" title="The app" width="200" />
 
-Drag and drop the folder containing the images and `settings.json` on the application window. Images will be included in alphabetical order.
+It can be run as python script
 
-Dropping any file from that folder has the same effect. Only the folder is considered.
+    python FotoPDF
+    
+or built as an app (see below)
+
+Drag and drop the folder containing the images and `settings.json` on the application window. Images will be included in alphabetical order. Dropping any file from that folder has the same effect. Only the folder is considered.
 
 
 ## Command line (you'll need to set the flag GUI to False)
 As Python script:
 
-    python3 FotoPDF <folder-where-images-and-settings.json-are>
+    python FotoPDF <folder-where-images-and-settings.json-are>
     
 As executable:
 
