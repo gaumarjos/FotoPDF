@@ -39,6 +39,8 @@ from pikepdf import Pdf, Page, PdfImage, Name, Dictionary, Stream
 
 # from pdfrw import PdfReader, PdfWriter
 
+os.environ['QT_MAC_WANTS_LAYER'] = '1'
+os.environ['QT_DEBUG_PLUGINS'] = '1'
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
 # Constants
