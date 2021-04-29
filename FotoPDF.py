@@ -130,7 +130,7 @@ class FotoPDF:
                 self.detail_widget.setText(text)
 
     @staticmethod
-    def fit_image(rect_x, rect_y, rect_w, rect_h, image_w, image_h):
+    def fit_image(rect_x, rect_y, rect_w, rect_h, image_w, image_h, valign):
         # Determine whether the limiting factor will be the width or the height
         w_ratio = rect_w / image_w
         if w_ratio * image_h <= rect_h:
@@ -138,14 +138,20 @@ class FotoPDF:
             scaled_image_w = rect_w
             scaled_image_h = image_h * w_ratio
             scaled_image_x = (rect_w - scaled_image_w) / 2. + rect_x
-            scaled_image_y = (rect_h - scaled_image_h) / 2. + rect_y
+            if valign == 'center':
+                scaled_image_y = (rect_h - scaled_image_h) / 2. + rect_y
+            elif valign == 'top':
+                scaled_image_y = rect_y * 1.
         else:
             # The height is the limiting factor
             h_ratio = rect_h / image_h
             scaled_image_w = image_w * h_ratio
             scaled_image_h = rect_h
             scaled_image_x = (rect_w - scaled_image_w) / 2. + rect_x
-            scaled_image_y = (rect_h - scaled_image_h) / 2. + rect_y
+            if valign == 'center':
+                scaled_image_y = (rect_h - scaled_image_h) / 2. + rect_y
+            elif valign == 'top':
+                scaled_image_y = rect_y * 1.
         return scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h
 
     # def fpdf_centered_text(self, text, font, size, y, black=True):
@@ -193,7 +199,7 @@ class FotoPDF:
         else:
             self.message_on_detail_widget("Warning: text cell too small for text.")
 
-    def rl_centered_image(self, image, from_side, from_top):
+    def rl_centered_image(self, image, from_side, from_top, from_bottom):
         # Read ImageDescription field from JPG. Exifread is the only library that works.
         # Exif doesn't have this tag and Pillow corrupts the accented characters.
         tags = exifread.process_file(open(image, 'rb'))
@@ -205,18 +211,22 @@ class FotoPDF:
 
         original_image_size = PIL.Image.open(image).size
         scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h = self.fit_image(from_side,
-                                                                                        50,
+                                                                                        from_top,
                                                                                         self.W - from_side * 2,
-                                                                                        self.H - from_top - 50,
+                                                                                        self.H - from_top - from_bottom,
                                                                                         original_image_size[0],
-                                                                                        original_image_size[1])
+                                                                                        original_image_size[1],
+                                                                                        'top')
+        # print(scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h)
+
         self.c.drawImage(image,
                          x=scaled_image_x,
-                         y=scaled_image_y,
+                         y=self.H - scaled_image_y - scaled_image_h,
                          width=scaled_image_w,
                          height=scaled_image_h,
                          mask=None)
-        return (from_top + scaled_image_h), caption
+
+        return (scaled_image_y + scaled_image_h), caption
 
     def inizialize_pdf(self):
         # In any case, write to drag folder here
@@ -236,11 +246,14 @@ class FotoPDF:
         self.obj = json.loads(data)
 
         # Creazione file e impostazioni generali
-        if self.obj["document"]["a4"]:
+        if self.obj["document"]["format"] == "A4":
             self.W, self.H = landscape(A4)
-        else:
+        elif self.obj["document"]["format"] == "custom":
             self.H = self.obj["document"]["height"]
             self.W = self.obj["document"]["width"]
+        else:
+            self.message_on_detail_widget("Error: Wrong slide format.")
+            return False
 
         output_filename = clean_html(self.obj['document']['title']) + ', ' + clean_html(self.obj['document']['author'])
         if len(self.obj['document']['suffix']) > 0:
@@ -385,10 +398,15 @@ class FotoPDF:
         for i, image in enumerate(self.images):
             text_x, caption = self.rl_centered_image(join(self.input_folder, image),
                                                      int(self.obj['photos']['from_side']),
-                                                     int(self.obj['photos']['from_top']))
-            self.rl_text(caption, 'font_text', 0, self.obj['photos']['size'],
-                         self.obj['photos']['interline'], self.obj['photos']['from_side'],
-                         (text_x + self.obj['photos']['interline'] / 1.))
+                                                     int(self.obj['photos']['from_top']),
+                                                     int(self.obj['photos']['from_bottom']))
+            self.rl_text(caption,
+                         'font_text',
+                         0,
+                         self.obj['photos']['size'],
+                         self.obj['photos']['interline'],
+                         self.obj['photos']['from_side'],
+                         (text_x + 1. * self.obj['photos']['size'] + 0. * self.obj['photos']['interline']))
             self.c.showPage()
 
     def grid_page(self):
@@ -433,7 +451,8 @@ class FotoPDF:
             scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h = self.fit_image(rect_x, rect_y,
                                                                                             rect_w, rect_h,
                                                                                             original_image_size[0],
-                                                                                            original_image_size[1])
+                                                                                            original_image_size[1],
+                                                                                            'center')
             self.c.drawImage(join(self.input_folder, image),
                              x=scaled_image_x,
                              y=scaled_image_y,
