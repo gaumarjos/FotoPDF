@@ -9,8 +9,7 @@
 # https://github.com/pyinstaller/pyinstaller/issues/5107
 # http://www.marinamele.com/from-a-python-script-to-a-portable-mac-application-with-py2app
 # https://py2app.readthedocs.io/_/downloads/en/stable/pdf/
-
-# I decided to use PySide2 instead of PyQt5 because PyQt5 was making the app, created with pyinstaller, crash.
+# https://github.com/tvdsluijs/pdfc/blob/master/pdf_compressor.py
 
 
 import os
@@ -38,10 +37,9 @@ from PySide2.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit
 from PySide2.QtGui import QIcon, QSyntaxHighlighter, QTextCharFormat, QColor
 from PySide2.QtCore import Qt
 from pikepdf import Pdf, Page, PdfImage, Name, Dictionary, Stream
-
-# import PyPDF2
-# from pathlib import Path
-# from pdfrw import PdfReader, PdfWriter
+import ghostscript
+import locale
+# import subprocess
 
 # os.environ['QT_MAC_WANTS_LAYER'] = '1'
 # os.environ['QT_DEBUG_PLUGINS'] = '1'
@@ -108,6 +106,7 @@ class FotoPDF:
 
         # Initialize variables
         self.obj = None
+        self.abs_tmp_output_filename = None
         self.abs_output_filename = None
         self.H = 0
         self.W = 0
@@ -247,6 +246,7 @@ class FotoPDF:
         output_filename = clean_html(self.obj['document']['title']) + ', ' + clean_html(self.obj['document']['author'])
         if len(self.obj['document']['suffix']) > 0:
             output_filename = output_filename + ', ' + clean_html(self.obj['document']['suffix']) + ".pdf"
+        self.abs_tmp_output_filename = join(self.input_folder, 'tmp.pdf')
         self.abs_output_filename = join(self.input_folder, output_filename)
 
         # if USE_FPDF:
@@ -266,7 +266,7 @@ class FotoPDF:
         #     self.pdf.add_font('font_text', '', self.obj["fonts"]["text"], uni=True)
 
         # Constructor
-        self.c = canvas.Canvas(self.abs_output_filename, enforceColorSpace='RGB')
+        self.c = canvas.Canvas(self.abs_tmp_output_filename, enforceColorSpace='RGB')
         self.c.setPageSize((self.W, self.H))
         self.c.setTitle(self.obj["document"]["title"])
         self.c.setAuthor(self.obj["document"]["author"])
@@ -518,119 +518,42 @@ class FotoPDF:
     def save_pdf(self):
         # Salva
         # if USE_FPDF:
-        #     self.pdf.output(self.abs_output_filename, "F")
+        #     self.pdf.output(self.abs_tmp_output_filename, "F")
         self.c.save()
+
+    def read_metadata(self):
+        pass
+
+    def resave_pdf(self):
+        quality = {
+            0: '/default',
+            1: '/prepress',
+            2: '/printer',
+            3: '/ebook',
+            4: '/screen'
+        }
+        args = ['gs', '-sDEVICE=pdfwrite',
+                '-dCompatibilityLevel=1.4',
+                '-dPDFSETTINGS={}'.format(quality[0]),
+                '-dNOPAUSE', '-dQUIET', '-dBATCH',
+                '-sOutputFile={}'.format(self.abs_output_filename),
+                self.abs_tmp_output_filename]
+
+        # Using python ghostscript module
+        encoding = locale.getpreferredencoding()
+        args = [a.encode(encoding) for a in args]
+        ghostscript.Ghostscript(*args)
+
+        # Calling ghoscript directly
+        # subprocess.call(args)
+
+        # Remove original file, called tmp.pdf
+        if os.path.exists(self.abs_tmp_output_filename):
+            os.remove(self.abs_tmp_output_filename)
+
         self.message_on_header_widget("Created ({:.1f}MB)!".format(
             getsize(self.abs_output_filename) / 1000000.))
         self.message_on_detail_widget("Drag another folder to create a new one.")
-
-    def read_metadata(self):
-        x = PyPDF2.PdfFileReader(self.abs_output_filename)
-        info = x.getDocumentInfo()
-        print(info)
-
-    def resave_pdf(self):
-        if 0:
-            # Useless
-            x = PdfReader(self.abs_output_filename)
-            y = PdfWriter()
-            for page in x.pages:
-                y.addpage(page)
-            y.write(self.abs_output_filename + '_resaved.pdf')
-            print(len(x.pages))
-
-        if 0:
-            # Useless
-            pdf_reader = PyPDF2.PdfFileReader(open(self.abs_output_filename, 'rb'))
-            pdf_writer = PyPDF2.PdfFileWriter()
-            for n in range(pdf_reader.numPages):
-                page = pdf_reader.getPage(n)
-                page.compressContentStreams()
-                pdf_writer.addPage(page)
-            with Path(self.abs_output_filename + '_resaved2.pdf').open(mode="wb") as output_file:
-                pdf_writer.write(output_file)
-
-        if 0:
-            src = Pdf.open(self.abs_output_filename)
-
-            pageobj = src.pages[2]
-            s = Stream(Alternate=Name("/DeviceRGB"),
-                       Filter=Name("/FlateDecode"),
-                       Length=2612,
-                       N=3)
-            pageobj['/Resources']['/ColorSpace'] = Dictionary({'/Cs1': ["/ICCBased", s]})
-
-            # l = list(src.pages[2].images.keys())
-            # pdfimage = PdfImage(src.pages[2].images[l[0]])
-            # print(pdfimage.colorspace)
-            # rawimage = pdfimage.obj
-            # pillowimage = pdfimage.as_pil_image()
-            # pdfimage.extract_to(fileprefix='__cacca')
-            # grayscale = pillowimage.convert('L')
-            # grayscale = grayscale.resize((32, 32))
-            # rawimage.write(zlib.compress(grayscale.tobytes()), filter = )
-            # rawimage.ColorSpace = Name("/DeviceRGB")
-            # rawimage.Filter = Name("/FlateDecode")
-
-            # print(str(pageobj1))
-
-            dst = Pdf.new()
-            dst.pages.extend(src.pages)
-            dst.save(self.abs_output_filename + '_resaved.pdf',
-                     normalize_content=True,
-                     linearize=False)
-
-            # Da reportlab
-            # "/XObject": {
-            #     "/FormXob.8125de7e43ed46d9023f94eb7297f833": pikepdf.Stream(stream_dict={
-            #         "/BitsPerComponent": 8,
-            #         "/ColorSpace": "/DeviceRGB",
-            #         "/Filter": ["/ASCII85Decode", "/DCTDecode"],
-            #         "/Height": 1000,
-            #         "/Length": 475040,
-            #         "/Subtype": "/Image",
-            #         "/Type": "/XObject",
-            #         "/Width": 1500
-            #     }, data= < ... >)
-            # }
-
-            # Corretto
-            # "/Resources": {
-            # "/ColorSpace": {
-            #     "/Cs1": ["/ICCBased",
-            #
-            #              pikepdf.Stream(stream_dict={
-            #                  "/Alternate": "/DeviceRGB",
-            #                  "/Filter": "/FlateDecode",
-            #                  "/Length": 2612,
-            #                  "/N": 3
-            #              },
-            #                  data= < ... >)]
-            # },
-            # ...
-            # "/XObject": {
-            #     "/Im3": pikepdf.Stream(stream_dict={
-            #     "/BitsPerComponent": 8,
-            #     "/ColorSpace": <.get_object(6, 0) >,
-            #     "/Filter": "/DCTDecode",
-            #     "/Height": 1000,
-            #     "/Interpolate": True,
-            #     "/Length": 380302,
-            #     "/Subtype": "/Image",
-            #     "/Type": "/XObject",
-            #     "/Width": 1500
-            # }, data = < ... >)
-            # }
-
-        if 1:
-            src = Pdf.open(self.abs_output_filename)
-            seed = Pdf.open('seed.pdf')
-            seed_page = seed.pages[0]
-            dst = Pdf.new()
-            for page in src.pages:
-                page['/Resources']['/ColorSpace'] = seed_page.Resources.ColorSpace
-            dst.pages.extend(src.pages)
-            dst.save(self.abs_output_filename + '_resaved.pdf')
 
     def create_pdf(self):
         if self.inizialize_pdf():
@@ -644,7 +567,7 @@ class FotoPDF:
                 self.final_page()
             self.save_pdf()
             # self.read_metadata()
-            # self.resave_pdf()
+            self.resave_pdf()
 
 
 class FileEdit(QLineEdit):
@@ -744,34 +667,3 @@ if __name__ == "__main__":
     else:
         mypdf = FotoPDF(sys.argv[1:], None)
         mypdf.create_pdf()
-
-# Unused code
-# if C == -1 or R == -1:
-#     print("Calcolo miglior disposizione griglia...")
-#     N = len(images)
-#     possibili_colonne = np.arange(N * 1.) + 1
-#     possibili_righe = np.ceil(N / possibili_colonne)
-#     possibili_aree_immagini_a_guida_colonne = ((W - 2 * m_lat) / possibili_colonne) ** 2 * (2 / 3)
-#     possibili_aree_immagini_a_guida_righe = ((H - 2 * m_lat) / possibili_righe) ** 2 * (3 / 2)
-#     aree_risultanti = np.minimum(possibili_aree_immagini_a_guida_colonne, possibili_aree_immagini_a_guida_righe)
-#     i_migliore = np.where(aree_risultanti == np.max(aree_risultanti))
-#     R = possibili_righe[i_migliore]
-#     C = possibili_colonne[i_migliore]
-#     # print(possibili_colonne)
-#     # print(possibili_righe)
-#     # print(aree_risultanti)
-#     max_to_min_sort_index = np.argsort(aree_risultanti)[::-1]
-#     print(possibili_righe[max_to_min_sort_index][:4])
-#     print(possibili_colonne[max_to_min_sort_index][:4])
-#     print(aree_risultanti[max_to_min_sort_index][:4])
-#
-# For more arguments, now unused
-# try:
-#     opts, args = getopt.getopt(argv, "i:",
-#                                ["input_folder="])
-# except getopt.GetoptError:
-#     print("Error: wrong arguments.")
-#     sys.exit(2)
-# for opt, arg in opts:
-#     if opt in ("-i", "--input_folder"):
-#         input_folder = arg
