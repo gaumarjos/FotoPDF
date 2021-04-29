@@ -10,6 +10,8 @@
 # http://www.marinamele.com/from-a-python-script-to-a-portable-mac-application-with-py2app
 # https://py2app.readthedocs.io/_/downloads/en/stable/pdf/
 
+# I decided to use PySide2 instead of PyQt5 because PyQt5 was making the app, created with pyinstaller, crash.
+
 
 import os
 import shutil
@@ -29,22 +31,23 @@ from reportlab.lib.pagesizes import A4, landscape
 import reportlab.rl_config
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit  # QLabel, QMessageBox, QLineEdit
-from PyQt5.QtGui import QIcon, QSyntaxHighlighter, QTextCharFormat, QColor
-from PyQt5.QtCore import Qt
+# from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit
+# from PyQt5.QtGui import QIcon, QSyntaxHighlighter, QTextCharFormat, QColor
+# from PyQt5.QtCore import Qt
+from PySide2.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit
+from PySide2.QtGui import QIcon, QSyntaxHighlighter, QTextCharFormat, QColor
+from PySide2.QtCore import Qt
 from pikepdf import Pdf, Page, PdfImage, Name, Dictionary, Stream
 
 # import PyPDF2
 # from pathlib import Path
-
 # from pdfrw import PdfReader, PdfWriter
 
-os.environ['QT_MAC_WANTS_LAYER'] = '1'
-os.environ['QT_DEBUG_PLUGINS'] = '1'
+# os.environ['QT_MAC_WANTS_LAYER'] = '1'
+# os.environ['QT_DEBUG_PLUGINS'] = '1'
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
 # Constants
-DEBUG = True
 GUI = True
 # USE_FPDF = False
 # USE_RL = True
@@ -58,11 +61,19 @@ MACOSMAGENTA = (154, 86, 163)
 MACOSDARK = (46, 46, 46)
 
 
-# Translate asset paths to useable format for PyInstaller
-# def resource_path(relative_path):
-#     if hasattr(sys, '_MEIPASS'):
-#         return os.path.join(sys._MEIPASS, relative_path)
-#     return os.path.join(os.path.abspath('.'), relative_path)
+# Translate asset paths to usable format for PyInstaller
+# if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+#     print("Running in a Pyinstaller bundle.")
+# else:
+#     print("Running in a normal Python process.")
+def resource_path(path):
+    # Needed only is the path is relative
+    if not os.path.isabs(path):
+        if hasattr(sys, '_MEIPASS'):
+            return os.path.join(sys._MEIPASS, path)
+        return os.path.join(os.path.abspath('.'), path)
+    else:
+        return path
 
 
 def atoi(text):
@@ -262,24 +273,24 @@ class FotoPDF:
 
         # Use user-defined True Type Font (TTF)
         try:
-            pdfmetrics.registerFont(TTFont('font_title', self.obj["fonts"]["title"]))
+            pdfmetrics.registerFont(TTFont('font_title', resource_path(self.obj["fonts"]["title"])))
         except:
             self.message_on_detail_widget(
-                "Error: Cannot find font_title, looking in {}".format(self.obj["fonts"]["title"]))
+                "Error: Cannot find font_title, looking in {}".format(resource_path(self.obj["fonts"]["title"])))
             return False
 
         try:
-            pdfmetrics.registerFont(TTFont('font_author', self.obj["fonts"]["author"]))
+            pdfmetrics.registerFont(TTFont('font_author', resource_path(self.obj["fonts"]["author"])))
         except:
             self.message_on_detail_widget("Error: Cannot find font_author, looking in {}".format(
-                self.obj["fonts"]["author"]))
+                resource_path(self.obj["fonts"]["author"])))
             return False
 
         try:
-            pdfmetrics.registerFont(TTFont('font_text', self.obj["fonts"]["text"]))
+            pdfmetrics.registerFont(TTFont('font_text', resource_path(self.obj["fonts"]["text"])))
         except:
             self.message_on_detail_widget("Error: Cannot find font_text, looking in {}".format(
-                self.obj["fonts"]["text"]))
+                resource_path(self.obj["fonts"]["author"])))
             return False
 
         self.c.setFont('font_text', 16)
@@ -701,7 +712,7 @@ def MainGUI():
     win.setGeometry(200, 200, 300, 450)
     win.setFixedSize(300, 450)
     win.setWindowTitle("FotoPDF")
-    app.setWindowIcon(QIcon('FotoPDF.png'))
+    app.setWindowIcon(QIcon(resource_path('FotoPDF.png')))
 
     detail_widget = QTextEdit(win)
     detail_widget.setAlignment(Qt.AlignCenter)
@@ -728,17 +739,6 @@ def MainGUI():
 
 
 if __name__ == "__main__":
-    if DEBUG:
-        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-            print("Running in a Pyinstaller bundle.")
-        else:
-            print("Running in a normal Python process.")
-
-        for a in sys.argv:
-            print("sys.argv[]: {}".format(a))
-        print(sys.executable)
-        print(os.getcwd())
-
     if GUI:
         MainGUI()
     else:
