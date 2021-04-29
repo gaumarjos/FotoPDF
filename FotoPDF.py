@@ -36,10 +36,9 @@ from reportlab.pdfbase.ttfonts import TTFont
 from PySide2.QtWidgets import QApplication, QMainWindow, QTextEdit, QLineEdit
 from PySide2.QtGui import QIcon, QSyntaxHighlighter, QTextCharFormat, QColor
 from PySide2.QtCore import Qt
-from pikepdf import Pdf, Page, PdfImage, Name, Dictionary, Stream
+# import subprocess
 import ghostscript
 import locale
-# import subprocess
 
 # os.environ['QT_MAC_WANTS_LAYER'] = '1'
 # os.environ['QT_DEBUG_PLUGINS'] = '1'
