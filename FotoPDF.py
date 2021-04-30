@@ -576,39 +576,42 @@ class FotoPDF:
         pass
 
     def resave_pdf(self):
-        quality = {
-            0: '/default',
-            1: '/prepress',
-            2: '/printer',
-            3: '/ebook',
-            4: '/screen'
-        }
-        args = ['gs', '-sDEVICE=pdfwrite',
-                '-dCompatibilityLevel=1.4',
-                '-dPDFSETTINGS={}'.format(quality[0]),
-                '-dNOPAUSE',
-                '-dQUIET',
-                '-dBATCH',
-                '-dColorAccuracy=2',
-                '-dProcessColorModel=/DeviceRGB',
-                '-sOutputFile={}'.format(self.abs_output_filename),
-                self.abs_tmp_output_filename]
+        if 0:
+            quality = {
+                0: '/default',
+                1: '/prepress',
+                2: '/printer',
+                3: '/ebook',
+                4: '/screen'
+            }
+            args = ['gs', '-sDEVICE=pdfwrite',
+                    '-dCompatibilityLevel=1.4',
+                    '-dPDFSETTINGS={}'.format(quality[0]),
+                    '-dNOPAUSE',
+                    '-dQUIET',
+                    '-dBATCH',
+                    '-dColorAccuracy=2',
+                    '-dProcessColorModel=/DeviceRGB',
+                    '-sOutputFile={}'.format(self.abs_output_filename),
+                    self.abs_tmp_output_filename]
 
-        # '-sDefaultRGBProfile=sRGB_v4_ICC_preference.icc',
-        # '-sOutputICCProfile=sRGB_v4_ICC_preference.icc',
-        # '-sImageICCProfile=sRGB_v4_ICC_preference.icc',
+            # '-sDefaultRGBProfile=sRGB_v4_ICC_preference.icc',
+            # '-sOutputICCProfile=sRGB_v4_ICC_preference.icc',
+            # '-sImageICCProfile=sRGB_v4_ICC_preference.icc',
 
-        # Using python ghostscript module
-        encoding = locale.getpreferredencoding()
-        args = [a.encode(encoding) for a in args]
-        ghostscript.Ghostscript(*args)
+            # Using python ghostscript module
+            encoding = locale.getpreferredencoding()
+            args = [a.encode(encoding) for a in args]
+            ghostscript.Ghostscript(*args)
 
-        # Calling ghoscript directly
-        # subprocess.call(args)
+            # Calling ghoscript directly
+            # subprocess.call(args)
 
-        # Remove original file, called tmp.pdf
-        if os.path.exists(self.abs_tmp_output_filename):
-            os.remove(self.abs_tmp_output_filename)
+            # Remove original file, called tmp.pdf
+            if os.path.exists(self.abs_tmp_output_filename):
+                os.remove(self.abs_tmp_output_filename)
+        else:
+            os.rename(self.abs_tmp_output_filename, self.abs_output_filename)
 
         self.message_on_header_widget("Created ({:.1f}MB)!".format(
             getsize(self.abs_output_filename) / 1000000.))
