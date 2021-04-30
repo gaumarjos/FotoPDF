@@ -2,6 +2,8 @@
 
 This app allows to create a presentation PDF from a bunch of images.
 
+<center><img src="docs/app_image.png" alt="The app" title="The app" width="200" /></center>
+
 The presentation has the traditional structure:
 1. Cover
 2. Text page with a description of the project
@@ -12,31 +14,18 @@ The presentation has the traditional structure:
 The expected workflow is:
 1. Export images from any software (i.e. Adobe Lightroom, Capture One, etc...) in a folder. Images must be in JPG format. The color space is irrelevant as it will be kept in the PDF. When exporting, remember to export images with all metadata, otherwise captions might not be exported and FotoPDF cannot read them.
 2. FotoPDF requires a `settings.json` to know how to draw the presentation. If that's not available in the folder the first time FotoPDF is launched, a default empty one will be created.
-3. Open FotoPDF and drag the folder on the app. Images will be included in alphabetical order.
-4. Done! A PDF is created in the same folder.
+    * Double click on the app
+    * If you're familiar with python, `python FotoPDF` 
+4. Open FotoPDF and drag the folder on the app. Images will be included in alphabetical order.
+5. Done! A PDF is created in the same folder.
 
-## GUI
-<img src="docs/app_image.png" alt="The app" title="The app" width="200" />
-
-It can be run as python script
-
-    python FotoPDF
-    
-or built as an app (see below).
-
-## Command line (you'll need to set the flag GUI to False)
-As Python script:
-
-    python FotoPDF <folder-where-images-and-settings.json-are>
-    
-As executable:
-
-    ./FotoPDF <folder-where-images-and-settings.json-are>
-    
 ## Settings (settings.json)
 This file is specific to the PDF to generate and must be placed in the same folder where the images are.
 
 If no settings.json is found, a default one will be created. You will the have to customize it as necessary.
+
+## Run from command line
+To be honest, it makes little sense because the time you'll save is minimal but if you really want to, just set the flag GUI to False in the source code and run `python FotoPDF <folder-where-images-and-settings.json-are>`
 
 ## Building the app
 The lightest app (42.3MB) can be created with pyinstaller. Just run:
