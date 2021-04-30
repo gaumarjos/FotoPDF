@@ -1,7 +1,7 @@
 venv/
 venv_3_6_5/
 build/
-dist/
+dist/FotoPDF
 *.pkl
 .DS_Store
 .idea/
