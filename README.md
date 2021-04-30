@@ -1,5 +1,20 @@
 # FotoPDF
 
+This app allows to create a presentation PDF from a bunch of images.
+
+The presentation has the traditional structure:
+1. Cover
+2. Text page with a description of the project
+3. Full-page images with captions. Captions are read directly from the images' ImageDescription field, "Caption" in Adobe Lightroom.
+4. Grid page
+5. Final page with contacts.
+
+The expected workflow is:
+1. Export images from any software (i.e. Adobe Lightroom, Capture One, etc...) in a folder. Images must be in JPG format. The color space is irrelevant as it will be kept in the PDF. When exporting, remember to export images with all metadata, otherwise captions might not be exported and FotoPDF cannot read them.
+2. FotoPDF requires a `settings.json` to know how to draw the presentation. If that's not available in the folder the first time FotoPDF is launched, a default empty one will be created.
+3. Open FotoPDF and drag the folder on the app. Images will be included in alphabetical order.
+4. Done! A PDF is created in the same folder.
+
 ## GUI
 <img src="docs/app_image.png" alt="The app" title="The app" width="200" />
 
@@ -7,10 +22,7 @@ It can be run as python script
 
     python FotoPDF
     
-or built as an app (see below)
-
-Drag and drop the folder containing the images and `settings.json` on the application window. Images will be included in alphabetical order. Dropping any file from that folder has the same effect. Only the folder is considered.
-
+or built as an app (see below).
 
 ## Command line (you'll need to set the flag GUI to False)
 As Python script:
