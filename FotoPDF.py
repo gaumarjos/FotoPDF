@@ -130,29 +130,44 @@ class FotoPDF:
                 self.detail_widget.setText(text)
 
     @staticmethod
-    def fit_image(rect_x, rect_y, rect_w, rect_h, image_w, image_h, valign):
+    # It fits an (image_w x image_h) image in a (rect_w x rect_h) rectangle with top left corner at (rect_x, rect_y)
+    # and returns the top left corner location (scaled_image_x, scaled_image_y) and size
+    # (scaled_image_w, scaled_image_h) of the scaled image
+    def fit_image(rect_x, rect_y, rect_w, rect_h, image_w, image_h, halign=1, valign=1):
         # Determine whether the limiting factor will be the width or the height
         w_ratio = rect_w / image_w
         if w_ratio * image_h <= rect_h:
             # The width is the limiting factor
             scaled_image_w = rect_w
             scaled_image_h = image_h * w_ratio
-            scaled_image_x = (rect_w - scaled_image_w) / 2. + rect_x
-            if valign == 'center':
-                scaled_image_y = (rect_h - scaled_image_h) / 2. + rect_y
-            elif valign == 'top':
-                scaled_image_y = rect_y * 1.
         else:
             # The height is the limiting factor
             h_ratio = rect_h / image_h
             scaled_image_w = image_w * h_ratio
             scaled_image_h = rect_h
+
+        # Horizontal alignment
+        if halign == 0:
+            # Left
+            scaled_image_x = rect_x * 1.
+        elif halign == 1:
+            # Center
             scaled_image_x = (rect_w - scaled_image_w) / 2. + rect_x
-            if valign == 'center':
-                scaled_image_y = (rect_h - scaled_image_h) / 2. + rect_y
-            elif valign == 'top':
-                scaled_image_y = rect_y * 1.
+
+        # Vertical alignment
+        if valign == 0:
+            # Top
+            scaled_image_y = rect_y * 1.
+        elif valign == 1:
+            # Center
+            scaled_image_y = (rect_h - scaled_image_h) / 2. + rect_y
+
         return scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h
+
+    # It converts the y coordinate from a top (easier for the author to understand) to a bottom (use by reportlab)
+    # reference frame
+    def top2bottom(self, top_y, element_h):
+        return self.H - top_y - element_h
 
     # def fpdf_centered_text(self, text, font, size, y, black=True):
     #     self.pdf.set_y(y)
@@ -164,44 +179,52 @@ class FotoPDF:
     #     self.pdf.cell(0, 0, text, 0, 1, align="C", fill=False)
     #     self.pdf.set_text_color(0, 0, 0)
 
-    def rl_single_line_centered_text(self, text, font, size, y, black=True):
+    def rl_single_line_centered_text(self, text, font, size, from_top, black=True):
         self.c.setFont(font, size)
         if black:
             self.c.setFillColorRGB(0, 0, 0)
         else:
             self.c.setFillColorRGB(1, 1, 1)
         text_width = self.c.stringWidth(text, font, size)
-        self.c.drawString((self.W - text_width) / 2.0, self.H - y, text)
-        # Alternative solution
-        # t = c.beginText()
-        # t.setTextOrigin(int(obj['description']['from_side']*MM2PT), int(H-obj['description']['from_top']*MM2PT))
-        # t.setFont('myfont', 16)
-        # t.textLine(obj['description']['string'])
-        # c.drawText(t)
+        # drawString requires the bottom left corner of the text to draw, converting the y coordinate. For a single-line
+        # text, the height of the textbox is the size of the font.
+        self.c.drawString((self.W - text_width) / 2.0, self.top2bottom(from_top, size), text)
 
     def rl_text(self, text, font, alignment, size, interline, from_side, from_top, black=True):
         stylesheet = getSampleStyleSheet()
         style = stylesheet['BodyText']
         style.fontSize = size
         style.fontName = font
+        # 0 = left
+        # 1 = center
+        # 2 = right
+        # 4 = justify
         style.alignment = alignment
         if black:
             style.textColor = colors.black
         else:
             style.textColor = colors.white
         style.leading = size + interline
+
         p = Paragraph(text, style)
-        aw = self.W - (from_side * 2)
-        ah = self.H - from_top
-        w, h = p.wrap(aw, ah)
-        if w <= aw and h <= ah:
-            p.drawOn(self.c, from_side, (self.H - from_top - h) if (from_top > 0) else ((self.H - h) / 2.))
+        text_area_w = self.W - (from_side * 2)
+        text_area_h = self.H - from_top
+        text_w, text_h = p.wrap(text_area_w, text_area_h)
+        if text_w <= text_area_w and text_h <= text_area_h:
+            # If there's enough space, draw
+            # drawOn requires the bottom left corner of the text to draw, converting the y coordinate
+            p.drawOn(self.c,
+                     from_side,
+                     self.top2bottom(from_top, text_h) if (from_top > 0) else self.top2bottom((self.H - text_h) / 2.,
+                                                                                              text_h))
         else:
-            self.message_on_detail_widget("Warning: text cell too small for text.")
+            # Otherwise report a warning and suggest make more space for text or use a smaller font
+            self.message_on_detail_widget(
+                "Warning: text area too small for text. Try making the area larger or reducing the font size.")
 
     def rl_centered_image(self, image, from_side, from_top, from_bottom):
-        # Read ImageDescription field from JPG. Exifread is the only library that works.
-        # Exif doesn't have this tag and Pillow corrupts the accented characters.
+        # Read ImageDescription field from JPG. Exifread is the only library that works. Exif doesn't have this tag and
+        # Pillow corrupts the accented characters.
         tags = exifread.process_file(open(image, 'rb'))
         try:
             caption = str(tags['Image ImageDescription'])
@@ -216,17 +239,19 @@ class FotoPDF:
                                                                                         self.H - from_top - from_bottom,
                                                                                         original_image_size[0],
                                                                                         original_image_size[1],
-                                                                                        'top')
-        # print(scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h)
+                                                                                        valign=0)
 
+        # drawImage requires the bottom left corner of the image to draw, converting the y coordinate
         self.c.drawImage(image,
                          x=scaled_image_x,
-                         y=self.H - scaled_image_y - scaled_image_h,
+                         y=self.top2bottom(scaled_image_y, scaled_image_h),
                          width=scaled_image_w,
                          height=scaled_image_h,
                          mask=None)
 
-        return (scaled_image_y + scaled_image_h), caption
+        bottom_of_the_image = scaled_image_y + scaled_image_h
+
+        return bottom_of_the_image, caption
 
     def inizialize_pdf(self):
         # In any case, write to drag folder here
@@ -249,8 +274,8 @@ class FotoPDF:
         if self.obj["document"]["format"] == "A4":
             self.W, self.H = landscape(A4)
         elif self.obj["document"]["format"] == "custom":
-            self.H = self.obj["document"]["height"]
-            self.W = self.obj["document"]["width"]
+            self.H = int(self.obj["document"]["height"])
+            self.W = int(self.obj["document"]["width"])
         else:
             self.message_on_detail_widget("Error: Wrong slide format.")
             return False
@@ -334,12 +359,14 @@ class FotoPDF:
         #                             int(self.obj['cover']['author']['from_top']),
         #                             self.obj["cover"]["author"]["black_text"])
 
+        # Draw the image horizontally center and scaled to occupy the whole frame. It expects an horizontal image.
         original_image_size = PIL.Image.open(
             join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1])).size
         self.c.drawImage(join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1]),
                          (self.W - original_image_size[0]) / 2,
                          0,
                          width=None, height=self.H, preserveAspectRatio=True)
+        # Draw the title horizontally centered
         self.rl_text(self.obj['document']['title'],
                      'font_title',
                      1,
@@ -348,6 +375,8 @@ class FotoPDF:
                      int(self.obj['cover']['title']['from_side']),
                      int(self.obj['cover']['title']['from_top']),
                      black=self.obj["cover"]["title"]["black_text"])
+
+        # Draw the author
         self.rl_single_line_centered_text(self.obj["document"]["author"],
                                           'font_author',
                                           int(self.obj['cover']['author']['size']),
@@ -367,9 +396,13 @@ class FotoPDF:
 
         text = self.obj['description']['string']
         text = text.replace("\n", "<br/>")
-        self.rl_text(text, 'font_text', 0, self.obj['description']['size'],
-                     self.obj['description']['interline'], self.obj['description']['from_side'],
-                     self.obj['description']['from_top'])
+        self.rl_text(text,
+                     'font_text',
+                     0,
+                     int(self.obj['description']['size']),
+                     int(self.obj['description']['interline']),
+                     int(self.obj['description']['from_side']),
+                     int(self.obj['description']['from_top']))
         self.c.showPage()
 
     def image_pages(self):
@@ -403,31 +436,31 @@ class FotoPDF:
             self.rl_text(caption,
                          'font_text',
                          0,
-                         self.obj['photos']['size'],
-                         self.obj['photos']['interline'],
-                         self.obj['photos']['from_side'],
-                         (text_x + 1. * self.obj['photos']['size'] + 0. * self.obj['photos']['interline']))
+                         int(self.obj['photos']['size']),
+                         int(self.obj['photos']['interline']),
+                         int(self.obj['photos']['from_side']),
+                         (text_x + 1. * int(self.obj['photos']['size']) + 0. * int(self.obj['photos']['interline'])))
             self.c.showPage()
 
     def grid_page(self):
         r = int(self.obj['grid']['rows'])
         c = int(self.obj['grid']['columns'])
-        m_oriz = self.obj["grid"]["horizontal_margin"]
-        m_vert = self.obj["grid"]["vertical_margin"]
-        m_lat = self.obj["grid"]["lateral_margin"]
-        image_ratio = self.obj["grid"]["image_ratio"]
+        m_oriz = int(self.obj["grid"]["horizontal_margin"])
+        m_vert = int(self.obj["grid"]["vertical_margin"])
+        m_lat = int(self.obj["grid"]["lateral_margin"])
+        fitting_block_ratio = float(self.obj["grid"]["fitting_block_ratio"])
 
-        # Parto dalle colonne e vedo se l'altezza sta nei margini
+        # Starting from columns and checking if the total height is within the margins
         rect_w = (self.W - 2 * m_lat - (c - 1) * m_oriz) / c
-        rect_h = rect_w / image_ratio
+        rect_h = rect_w / fitting_block_ratio
         total_h = r * rect_h + (r - 1) * m_vert + m_lat
-        # E' troppo alta, devo ripartire dalle righe e calcolare le colonne di conseguenza
+        # Too high, restarting from rows and checking if the total width is within the margins
         if total_h > self.H:
             rect_h = (self.H - 2 * m_lat - (r - 1) * m_vert) / r
-            rect_w = rect_h * image_ratio
+            rect_w = rect_h * fitting_block_ratio
             total_w = c * rect_w + (c - 1) * m_oriz + m_lat
             if total_w > self.W:
-                print("Non può essere.")
+                print("It cannot be.")
 
         # if USE_FPDF:
         #     self.pdf.add_page()
@@ -451,8 +484,7 @@ class FotoPDF:
             scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h = self.fit_image(rect_x, rect_y,
                                                                                             rect_w, rect_h,
                                                                                             original_image_size[0],
-                                                                                            original_image_size[1],
-                                                                                            'center')
+                                                                                            original_image_size[1])
             self.c.drawImage(join(self.input_folder, image),
                              x=scaled_image_x,
                              y=scaled_image_y,
@@ -479,8 +511,8 @@ class FotoPDF:
             #                             self.obj['final']['author']['from_top'], black=True)
             self.rl_single_line_centered_text(self.obj['document']['author'],
                                               'font_text',
-                                              self.obj['final']['author']['size'],
-                                              self.obj['final']['author']['from_top'],
+                                              int(self.obj['final']['author']['size']),
+                                              int(self.obj['final']['author']['from_top']),
                                               True)
 
         if bool(self.obj['final']['website']['show']):
@@ -491,8 +523,8 @@ class FotoPDF:
             #                             self.obj['final']['website']['from_top'], black=True)
             self.rl_single_line_centered_text(self.obj['document']['website'],
                                               'font_text',
-                                              self.obj['final']['website']['size'],
-                                              self.obj['final']['website']['from_top'],
+                                              int(self.obj['final']['website']['size']),
+                                              int(self.obj['final']['website']['from_top']),
                                               True)
 
         if bool(self.obj['final']['email']['show']):
@@ -503,8 +535,8 @@ class FotoPDF:
             #                             self.obj['final']['email']['from_top'], black=True)
             self.rl_single_line_centered_text(self.obj['document']['email'],
                                               'font_text',
-                                              self.obj['final']['email']['size'],
-                                              self.obj['final']['email']['from_top'],
+                                              int(self.obj['final']['email']['size']),
+                                              int(self.obj['final']['email']['from_top']),
                                               True)
 
         if bool(self.obj['final']['phone']['show']):
@@ -515,8 +547,8 @@ class FotoPDF:
             #                             self.obj['final']['phone']['from_top'], black=True)
             self.rl_single_line_centered_text(self.obj['document']['phone'],
                                               'font_text',
-                                              self.obj['final']['phone']['size'],
-                                              self.obj['final']['phone']['from_top'],
+                                              int(self.obj['final']['phone']['size']),
+                                              int(self.obj['final']['phone']['from_top']),
                                               True)
 
         if bool(self.obj['final']['disclaimer']['show']):
@@ -527,8 +559,8 @@ class FotoPDF:
             #                             self.obj['final']['disclaimer']['from_top'], black=True)
             self.rl_single_line_centered_text(self.obj['document']['disclaimer'],
                                               'font_text',
-                                              self.obj['final']['disclaimer']['size'],
-                                              self.obj['final']['disclaimer']['from_top'],
+                                              int(self.obj['final']['disclaimer']['size']),
+                                              int(self.obj['final']['disclaimer']['from_top']),
                                               True)
 
         self.c.showPage()

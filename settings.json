@@ -1,12 +1,12 @@
 {
   "document": {
-    "title": "Casari e Bergamini <br/>col turbante",
-    "author": "Stefano Salati",
-    "website": "www.stefanosalati.com",
+    "title": "...",
+    "author": "...",
+    "website": "...",
     "email": "...",
     "phone": "...",
     "disclaimer": "",
-    "suffix": "Stretta",
+    "suffix": "",
     "format": "custom",
     "width": 1024,
     "height": 768,
@@ -32,7 +32,7 @@
     },
     "author": {
       "size": 26,
-      "from_top": 740,
+      "from_top": 724,
       "black_text": 0,
       "_comment": "4/3: from_top 740, A4: from_top 576"
     }
@@ -56,44 +56,45 @@
   },
   "grid": {
     "black_background": 0,
-    "image_ratio": 1.0,
+    "fitting_block_ratio": 1.5,
     "rows": 4,
     "columns": 6,
     "horizontal_margin": 14,
     "vertical_margin": 14,
-    "lateral_margin": 28
+    "lateral_margin": 28,
+    "_comment": "good values for fitting_block_ratio are 1.5 if all images are horizontal, 1.0 if they're a mix of horizontal and vertical and, perhaps, 0.66 if they're all vertical"
   },
   "final": {
     "show": 1,
     "author": {
       "show": 1,
       "size": 40,
-      "from_top": 360,
-      "_comment": "4/3: 360, A4: 280"
+      "from_top": 320,
+      "_comment": "4/3: 320, A4: 240"
     },
     "website": {
       "show": 0,
       "size": 20,
-      "from_top": 400,
-      "_comment": "4/3: 400, A4: 300"
+      "from_top": 380,
+      "_comment": "4/3: 380, A4: 280"
     },
     "email": {
       "show": 1,
       "size": 20,
-      "from_top": 400,
-      "_comment": "4/3: 400, A4: 300"
+      "from_top": 380,
+      "_comment": "4/3: 380, A4: 280"
     },
     "phone": {
       "show": 1,
       "size": 20,
-      "from_top": 430,
-      "_comment": "4/3: 430, A4: 350"
+      "from_top": 410,
+      "_comment": "4/3: 410, A4: 330"
     },
     "disclaimer": {
       "show": 1,
       "size": 20,
-      "from_top": 700,
-      "_comment": "4/3: 700, A4: 560"
+      "from_top": 680,
+      "_comment": "4/3: 680, A4: 540"
     }
   }
 }
