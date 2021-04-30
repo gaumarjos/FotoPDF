@@ -10,6 +10,7 @@
 # http://www.marinamele.com/from-a-python-script-to-a-portable-mac-application-with-py2app
 # https://py2app.readthedocs.io/_/downloads/en/stable/pdf/
 # https://github.com/tvdsluijs/pdfc/blob/master/pdf_compressor.py
+# https://www.ghostscript.com/doc/current/Use.htm#Parameter_switches
 
 
 import os
@@ -585,9 +586,17 @@ class FotoPDF:
         args = ['gs', '-sDEVICE=pdfwrite',
                 '-dCompatibilityLevel=1.4',
                 '-dPDFSETTINGS={}'.format(quality[0]),
-                '-dNOPAUSE', '-dQUIET', '-dBATCH',
+                '-dNOPAUSE',
+                '-dQUIET',
+                '-dBATCH',
+                '-dColorAccuracy=2',
+                '-dProcessColorModel=/DeviceRGB',
                 '-sOutputFile={}'.format(self.abs_output_filename),
                 self.abs_tmp_output_filename]
+
+        # '-sDefaultRGBProfile=sRGB_v4_ICC_preference.icc',
+        # '-sOutputICCProfile=sRGB_v4_ICC_preference.icc',
+        # '-sImageICCProfile=sRGB_v4_ICC_preference.icc',
 
         # Using python ghostscript module
         encoding = locale.getpreferredencoding()
