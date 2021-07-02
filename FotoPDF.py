@@ -87,6 +87,20 @@ def clean_html(raw_html):
     cleantext = re.sub(cleanr, '', raw_html)
     return cleantext
 
+def longest_common_prefix(list_of_strings):
+    if list_of_strings == []:
+        return ''
+    if len(list_of_strings) == 1:
+        return list_of_strings[0]
+    list_of_strings.sort()
+    shortest = list_of_strings[0]
+    prefix = ''
+    for i in range(len(shortest)):
+        if list_of_strings[len(list_of_strings) - 1][i] == shortest[i]:
+            prefix += list_of_strings[len(list_of_strings) - 1][i]
+        else:
+            break
+    return prefix
 
 class FotoPDF:
 
@@ -254,21 +268,14 @@ class FotoPDF:
 
         return bottom_of_the_image, caption
 
-    def inizialize_pdf(self):
+    def inizialize_pdf(self, setting_file, setting_file_suffix):
         # In any case, write to drag folder here
         self.message_on_header_widget("Drag folder here")
         self.message_on_detail_widget("", append=False)
 
         # Lettura JSON
-        try:
-            with open(join(self.input_folder, 'settings.json'), 'r', encoding="utf8") as myjson:
-                data = myjson.read()
-        except:
-            self.message_on_detail_widget(
-                "Warning: Cannot find settings.json in folder. Creating a default one that will need to be customized.")
-            shutil.copyfile('settings.json', join(self.input_folder, 'settings.json'))
-            with open(join(self.input_folder, 'settings.json'), 'r', encoding="utf8") as myjson:
-                data = myjson.read()
+        with open(join(self.input_folder, setting_file), 'r', encoding="utf8") as myjson:
+            data = myjson.read()
         self.obj = json.loads(data)
 
         # Creazione file e impostazioni generali
@@ -283,7 +290,11 @@ class FotoPDF:
 
         output_filename = clean_html(self.obj['document']['title']) + ', ' + clean_html(self.obj['document']['author'])
         if len(self.obj['document']['suffix']) > 0:
-            output_filename = output_filename + ', ' + clean_html(self.obj['document']['suffix']) + ".pdf"
+            output_filename = output_filename + ', ' + clean_html(self.obj['document']['suffix'])
+        if len(setting_file_suffix) > 0:
+            output_filename = output_filename + ' ' + setting_file_suffix
+        output_filename = output_filename + ".pdf"
+
         self.abs_tmp_output_filename = join(self.input_folder, 'tmp.pdf')
         self.abs_output_filename = join(self.input_folder, output_filename)
 
@@ -618,18 +629,37 @@ class FotoPDF:
         self.message_on_detail_widget("Drag another folder to create a new one.")
 
     def create_pdf(self):
-        if self.inizialize_pdf():
-            if bool(self.obj['cover']['show']):
-                self.cover_page()
-            if bool(self.obj['description']['show']):
-                self.description_page()
-            self.image_pages()
-            self.grid_page()
-            if self.obj['final']['show']:
-                self.final_page()
-            self.save_pdf()
-            # self.read_metadata()
-            self.resave_pdf()
+        # Manage the case when more than one json exists
+
+        # Ricerca json
+        setting_files = [f for f in listdir(self.input_folder) if f.endswith(".json")]
+        setting_files.sort(key=natural_keys)
+        prefix = longest_common_prefix(setting_files)
+
+        # If no JSON is found, a default one will be created from a template
+        if len(setting_files) == 0:
+            self.message_on_detail_widget(
+                "Warning: Cannot find settings.json in folder. Creating a default one that will need to be customized.")
+            shutil.copyfile('settings.json', join(self.input_folder, 'settings.json'))
+        else:
+            # Create one PDF for each JSON file found
+            for setting_file in setting_files:
+                # A suffix is useful in case of multiple JSON files to distinguish between the multiple documents that
+                # are generated.
+                setting_file_suffix = setting_file[len(prefix):-len(".json")]
+                # Create the document
+                if self.inizialize_pdf(setting_file, setting_file_suffix):
+                    if bool(self.obj['cover']['show']):
+                        self.cover_page()
+                    if bool(self.obj['description']['show']):
+                        self.description_page()
+                    self.image_pages()
+                    self.grid_page()
+                    if self.obj['final']['show']:
+                        self.final_page()
+                    self.save_pdf()
+                    # self.read_metadata()
+                    self.resave_pdf()
 
 
 class FileEdit(QLineEdit):
@@ -657,8 +687,6 @@ class FileEdit(QLineEdit):
         if urls and urls[0].scheme() == 'file':
             draggedpath = str(urls[0].path())
             if isfile(draggedpath) or isdir(draggedpath):
-                # if filepath[-4:].lower() == ".jpg":
-
                 pdf = FotoPDF(draggedpath, self, self.detail_widget)
                 pdf.create_pdf()
             else:

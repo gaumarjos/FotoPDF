@@ -1,10 +1,10 @@
 {
   "document": {
-    "title": "...",
-    "author": "...",
-    "website": "...",
-    "email": "...",
-    "phone": "...",
+    "title": "Title",
+    "author": "Author",
+    "website": "",
+    "email": "",
+    "phone": "",
     "disclaimer": "",
     "suffix": "",
     "format": "custom",
