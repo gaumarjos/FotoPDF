@@ -57,6 +57,7 @@ MACOSCYAN = (84, 153, 166)
 MACOSBLUE = (48, 123, 246)
 MACOSMAGENTA = (154, 86, 163)
 MACOSDARK = (46, 46, 46)
+LANGUAGES = ['it', 'en', 'de', 'fr', 'es']
 
 
 # Translate asset paths to usable format for PyInstaller
@@ -87,6 +88,7 @@ def clean_html(raw_html):
     cleantext = re.sub(cleanr, '', raw_html)
     return cleantext
 
+
 def longest_common_prefix(list_of_strings):
     if list_of_strings == []:
         return ''
@@ -101,6 +103,7 @@ def longest_common_prefix(list_of_strings):
         else:
             break
     return prefix
+
 
 class FotoPDF:
 
@@ -128,6 +131,7 @@ class FotoPDF:
         #     self.pdf = None
         self.c = None
         self.images = []
+        self.language = None
 
     def message_on_header_widget(self, text):
         if self.header_widget is None:
@@ -143,6 +147,30 @@ class FotoPDF:
                 self.detail_widget.append(text)
             else:
                 self.detail_widget.setText(text)
+
+    def whichcaption(self, text):
+        if len(text) > 0:
+            captions = text.split("#")
+            captions = list(filter(None, captions))
+
+            # Multilanguage captions are not used
+            if len(captions) == 1:
+                caption = captions[0]
+            # They are used, look for the right language
+            else:
+                caption = ""
+                if self.language is None:
+                    caption = captions[0][3:]
+                else:
+                    for candidate in captions:
+                        # Ignore strings that are too short, probably formatting errors
+                        if len(candidate) > 4:
+                            if candidate[:2].lower() == self.language:
+                                caption = candidate[3:]
+
+            return caption
+        else:
+            return ""
 
     @staticmethod
     # It fits an (image_w x image_h) image in a (rect_w x rect_h) rectangle with top left corner at (rect_x, rect_y)
@@ -242,7 +270,7 @@ class FotoPDF:
         # Pillow corrupts the accented characters.
         tags = exifread.process_file(open(image, 'rb'))
         try:
-            caption = str(tags['Image ImageDescription'])
+            caption = self.whichcaption(str(tags['Image ImageDescription']))
         except:
             caption = ""
             self.message_on_detail_widget("Warning: \"{}\" does not have a caption.".format(os.path.basename(image)))
@@ -271,7 +299,7 @@ class FotoPDF:
     def inizialize_pdf(self, setting_file, setting_file_suffix):
         # In any case, write to drag folder here
         self.message_on_header_widget("Drag folder here")
-        self.message_on_detail_widget("", append=False)
+        self.message_on_detail_widget("Using setting file \"{}\".".format(setting_file), append=True)
 
         # Lettura JSON
         with open(join(self.input_folder, setting_file), 'r', encoding="utf8") as myjson:
@@ -291,9 +319,24 @@ class FotoPDF:
         output_filename = clean_html(self.obj['document']['title']) + ', ' + clean_html(self.obj['document']['author'])
         if len(self.obj['document']['suffix']) > 0:
             output_filename = output_filename + ', ' + clean_html(self.obj['document']['suffix'])
+
+        # If the setting file has a suffix (to have it, we must have at least 2 setting files)
         if len(setting_file_suffix) > 0:
             output_filename = output_filename + ' ' + setting_file_suffix
+            if setting_file_suffix.lower() in LANGUAGES:
+                self.language = setting_file_suffix.lower()
+                self.message_on_detail_widget(
+                    "Suffix \"{}\" looks like a language tag. I'll use captions starting with \"#{}\" if present.".format(
+                        self.language, self.language))
         output_filename = output_filename + ".pdf"
+
+        # If the setting file ahs no suffix (so, we have only one setting file), but that ends with something that looks
+        # like a language, then process it as such. -5 is to remove .json.
+        if setting_file[-7:-5] in LANGUAGES:
+            self.language = setting_file[-7:-5].lower()
+            self.message_on_detail_widget(
+                "Suffix \"{}\" looks like a language tag. I'll use captions starting with \"#{}\" if present.".format(
+                    self.language, self.language))
 
         self.abs_tmp_output_filename = join(self.input_folder, 'tmp.pdf')
         self.abs_output_filename = join(self.input_folder, output_filename)
@@ -348,9 +391,9 @@ class FotoPDF:
         self.images = [f for f in listdir(self.input_folder) if f.endswith(".jpg")]
         self.images.sort(key=natural_keys)
         if len(self.images) == 0:
-            self.message_on_detail_widget("Error: No image found in folder.", append=False)
+            self.message_on_detail_widget("Error: No image found in folder.", append=True)
             return False
-        self.message_on_detail_widget("Creating PDF with images in \"{}\".".format(self.input_folder))
+        self.message_on_detail_widget("Creating PDF...")
 
         return True
 
@@ -626,7 +669,8 @@ class FotoPDF:
 
         self.message_on_header_widget("Created ({:.1f}MB)!".format(
             getsize(self.abs_output_filename) / 1000000.))
-        self.message_on_detail_widget("Drag another folder to create a new one.")
+        self.message_on_detail_widget("Created ({:.1f}MB)!\n".format(
+            getsize(self.abs_output_filename) / 1000000.))
 
     def create_pdf(self):
         # Manage the case when more than one json exists
@@ -635,6 +679,8 @@ class FotoPDF:
         setting_files = [f for f in listdir(self.input_folder) if f.endswith(".json")]
         setting_files.sort(key=natural_keys)
         prefix = longest_common_prefix(setting_files)
+
+        self.message_on_detail_widget("Dragged folder \"{}\".\n".format(self.input_folder), append=False)
 
         # If no JSON is found, a default one will be created from a template
         if len(setting_files) == 0:
@@ -660,6 +706,7 @@ class FotoPDF:
                     self.save_pdf()
                     # self.read_metadata()
                     self.resave_pdf()
+            self.message_on_detail_widget("Drag another folder to create a new one.")
 
 
 class FileEdit(QLineEdit):
@@ -722,8 +769,8 @@ def MainGUI():
     # app = QApplication(sys.argv)
     app = QApplication([])
     win = QMainWindow()
-    win.setGeometry(200, 200, 300, 450)
-    win.setFixedSize(300, 450)
+    win.setGeometry(200, 200, 300, 600)
+    win.setFixedSize(300, 600)
     win.setWindowTitle("FotoPDF")
     app.setWindowIcon(QIcon(resource_path('FotoPDF.png')))
 
@@ -731,8 +778,9 @@ def MainGUI():
     detail_widget.setAlignment(Qt.AlignCenter)
     highlighter = Highlighter(detail_widget.document())
     detail_widget.setReadOnly(True)
-    detail_widget.setText("Tip: it works with both a folder or any file in that folder.")
-    detail_widget.setGeometry(0, 300, 300, 150)
+    detail_widget.setText("Tip: it works with "
+                          "both a folder or any file in that folder.")
+    detail_widget.setGeometry(0, 300, 300, 300)
     detail_widget.setStyleSheet("background-color: rgb{}; color: rgb(255,255,255);".format(str(MACOSDARK)))
 
     # Create widget to accept drag&drop

@@ -20,7 +20,22 @@ The expected workflow is:
 5. Done! A PDF is created in the same folder.
 
 ## Settings (settings.json)
-`settings.json` can be edited with any text editor and fields should self-explanatory.
+`settings.json` can be edited with any text editor and fields should self-explanatory. The name of the file is unimportant provided the extension is `.json`.
+
+If the folder contains multiple json files, it is assumed that the user wants multiple versions of the PDF. For example in different languages.
+
+### Multilanguage support
+
+#### Multiple setting files and multiple captions (how it should be)
+If the settings files starts with the same name and have suffixes that look like languages, i.e. `settings it.json` and `settings en.json`, the software will look for tags like `#it` and `#en` in the image captions and, if found, will use the corresponding one.
+
+Example of a caption with multilanguage support: `#it Questa è una didascalia. #en This is a caption.`.
+
+#### Multiple setting files but only one caption
+The software uses that caption for all settings.
+
+#### One setting file but multilanguage captions
+If the setting file has an ending that looks like a language specifier, then the corresponding caption is found. If the setting file has no particular ending, the first caption will be used.
 
 ## Run from command line
 To be honest, it makes little sense because the time you'll save is minimal but if you really want to, just set the flag GUI to False in the source code and run `python FotoPDF <folder-where-images-and-settings.json-are>`
