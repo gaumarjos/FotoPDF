@@ -328,15 +328,16 @@ class FotoPDF:
                 self.message_on_detail_widget(
                     "Suffix \"{}\" looks like a language tag. I'll use captions starting with \"#{}\" if present.".format(
                         self.language, self.language))
-        output_filename = output_filename + ".pdf"
+        else:
+            # If the setting file has no suffix (so, we have only one setting file), but that ends with something that
+            # looks like a language, then process it as such. -5 is to remove .json.
+            if setting_file[-7:-5] in LANGUAGES:
+                self.language = setting_file[-7:-5].lower()
+                self.message_on_detail_widget(
+                    "Suffix \"{}\" looks like a language tag. I'll use captions starting with \"#{}\" if present.".format(
+                        self.language, self.language))
 
-        # If the setting file ahs no suffix (so, we have only one setting file), but that ends with something that looks
-        # like a language, then process it as such. -5 is to remove .json.
-        if setting_file[-7:-5] in LANGUAGES:
-            self.language = setting_file[-7:-5].lower()
-            self.message_on_detail_widget(
-                "Suffix \"{}\" looks like a language tag. I'll use captions starting with \"#{}\" if present.".format(
-                    self.language, self.language))
+        output_filename = output_filename + ".pdf"
 
         self.abs_tmp_output_filename = join(self.input_folder, 'tmp.pdf')
         self.abs_output_filename = join(self.input_folder, output_filename)
