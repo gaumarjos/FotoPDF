@@ -389,7 +389,7 @@ class FotoPDF:
         self.c.setFont('font_text', 16)
 
         # Ricerca immagini
-        self.images = [f for f in listdir(self.input_folder) if f.endswith(".jpg")]
+        self.images = [f for f in listdir(self.input_folder) if f.lower().endswith(".jpg")]
         self.images.sort(key=natural_keys)
         if len(self.images) == 0:
             self.message_on_detail_widget("Error: No image found in folder.", append=True)
