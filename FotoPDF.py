@@ -207,6 +207,12 @@ class FotoPDF:
 
         return scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h
 
+    def vrel2abs(self, x):
+        if x > 1.0:
+            return x
+        else:
+            return x * self.H
+
     # It converts the y coordinate from a top (easier for the author to understand) to a bottom (use by reportlab)
     # reference frame
     def top2bottom(self, top_y, element_h):
@@ -418,25 +424,34 @@ class FotoPDF:
         # Draw the image horizontally center and scaled to occupy the whole frame. It expects an horizontal image.
         original_image_size = PIL.Image.open(
             join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1])).size
+        zoom = float(self.obj['cover']['zoom'])
+        scaled_image_x, scaled_image_y, scaled_image_w, scaled_image_h = self.fit_image(-self.W/2.0*(zoom-1.0),
+                                                                                        -self.H/2.0*(zoom-1.0),
+                                                                                        self.W*zoom, self.H*zoom,
+                                                                                        original_image_size[0],
+                                                                                        original_image_size[1])
         self.c.drawImage(join(self.input_folder, self.images[self.obj["cover"]["use_image"] - 1]),
-                         (self.W - original_image_size[0]) / 2,
-                         0,
-                         width=None, height=self.H, preserveAspectRatio=True)
+                         x=scaled_image_x,
+                         y=scaled_image_y,
+                         width=scaled_image_w,
+                         height=scaled_image_h,
+                         preserveAspectRatio=True)
+
         # Draw the title horizontally centered
         self.rl_text(self.obj['document']['title'],
                      'font_title',
                      1,
                      int(self.obj['cover']['title']['size']),
                      int(self.obj['cover']['title']['interline']),
-                     int(self.obj['cover']['title']['from_side']),
-                     int(self.obj['cover']['title']['from_top']),
+                     self.vrel2abs(float(self.obj['cover']['title']['from_side'])),
+                     self.vrel2abs(float(self.obj['cover']['title']['from_top'])),
                      black=self.obj["cover"]["title"]["black_text"])
 
         # Draw the author
         self.rl_single_line_centered_text(self.obj["document"]["author"],
                                           'font_author',
                                           int(self.obj['cover']['author']['size']),
-                                          int(self.obj['cover']['author']['from_top']),
+                                          self.vrel2abs(float(self.obj['cover']['author']['from_top'])),
                                           self.obj["cover"]["author"]["black_text"])
         self.c.showPage()
 
@@ -457,8 +472,8 @@ class FotoPDF:
                      0,
                      int(self.obj['description']['size']),
                      int(self.obj['description']['interline']),
-                     int(self.obj['description']['from_side']),
-                     int(self.obj['description']['from_top']))
+                     self.vrel2abs(float(self.obj['description']['from_side'])),
+                     self.vrel2abs(float(self.obj['description']['from_top'])))
         self.c.showPage()
 
     def image_pages(self):
@@ -568,7 +583,7 @@ class FotoPDF:
             self.rl_single_line_centered_text(self.obj['document']['author'],
                                               'font_text',
                                               int(self.obj['final']['author']['size']),
-                                              int(self.obj['final']['author']['from_top']),
+                                              self.vrel2abs(float(self.obj['final']['author']['from_top'])),
                                               True)
 
         if bool(self.obj['final']['website']['show']):
@@ -580,7 +595,7 @@ class FotoPDF:
             self.rl_single_line_centered_text(self.obj['document']['website'],
                                               'font_text',
                                               int(self.obj['final']['website']['size']),
-                                              int(self.obj['final']['website']['from_top']),
+                                              self.vrel2abs(float(self.obj['final']['website']['from_top'])),
                                               True)
 
         if bool(self.obj['final']['email']['show']):
@@ -592,7 +607,7 @@ class FotoPDF:
             self.rl_single_line_centered_text(self.obj['document']['email'],
                                               'font_text',
                                               int(self.obj['final']['email']['size']),
-                                              int(self.obj['final']['email']['from_top']),
+                                              self.vrel2abs(float(self.obj['final']['email']['from_top'])),
                                               True)
 
         if bool(self.obj['final']['phone']['show']):
@@ -604,7 +619,7 @@ class FotoPDF:
             self.rl_single_line_centered_text(self.obj['document']['phone'],
                                               'font_text',
                                               int(self.obj['final']['phone']['size']),
-                                              int(self.obj['final']['phone']['from_top']),
+                                              self.vrel2abs(float(self.obj['final']['phone']['from_top'])),
                                               True)
 
         if bool(self.obj['final']['disclaimer']['show']):
@@ -616,7 +631,7 @@ class FotoPDF:
             self.rl_single_line_centered_text(self.obj['document']['disclaimer'],
                                               'font_text',
                                               int(self.obj['final']['disclaimer']['size']),
-                                              int(self.obj['final']['disclaimer']['from_top']),
+                                              self.vrel2abs(float(self.obj['final']['disclaimer']['from_top'])),
                                               True)
 
         self.c.showPage()
