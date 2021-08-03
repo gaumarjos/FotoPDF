@@ -14,6 +14,7 @@ pyinstaller --noconfirm --log-level=ERROR \
     --name FotoPDF \
     --paths ~/PycharmProjects/FotoPDF/venv_3_6_5/lib/python3.6/site-packages/ \
     --add-data font_default.ttf:. \
+    --add-data settings.json:. \
     --add-data FotoPDF.png:. \
     --icon FotoPDF.png \
     --hidden-import PySide2 \
@@ -21,3 +22,5 @@ pyinstaller --noconfirm --log-level=ERROR \
     --hidden-import PySide2.QtGui \
     --hidden-import PySide2.QtCore \
     FotoPDF.py
+
+cp -R dist/FotoPDF.app /Applications/

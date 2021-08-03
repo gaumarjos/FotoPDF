@@ -8,9 +8,9 @@
     "disclaimer": "",
     "suffix": "",
     "format": "custom",
-    "width": 1024,
+    "width": 1086,
     "height": 768,
-    "_comment": "can be 'A4' or 'custom'"
+    "_comment": "1086x768 has the same ratio of an A4 paper, so it can be easily further converted with Preview. 'A4' can be used instead of 'custom' but the resolution is rather low."
   },
   "fonts": {
     "default": "Helvetica",
@@ -20,45 +20,44 @@
   },
   "cover": {
     "show": 1,
-    "use_image": 7,
+    "use_image": 1,
+    "zoom": 1.0,
     "black_background": 1,
     "title": {
-      "size": 54,
-      "from_top": 30,
-      "from_side": 70,
+      "size": 50,
+      "from_top": 0.033,
+      "from_side": 0.12,
       "interline": 8,
-      "black_text": 0,
-      "_comment": "4/3: from_top 30, A4: from_top 20"
+      "black_text": 0
     },
     "author": {
       "size": 26,
-      "from_top": 724,
-      "black_text": 0,
-      "_comment": "4/3: from_top 740, A4: from_top 576"
+      "from_top": 0.91,
+      "black_text": 0
     }
   },
   "description": {
     "show": 1,
     "string": "...",
-    "size": 16,
-    "from_side": 100,
-    "from_top": 0,
+    "notes": "",
+    "size": 14,
+    "from_side": 0.13,
+    "from_top": 0.0,
     "interline": 8,
-    "_comment1": "_from_top <= 0 means center vertically",
-    "_comment2": "4/3: size 16, from_side 100, A4: size 14, from_side 80"
+    "_comment1": "_from_top <= 0 means center vertically"
   },
   "photos": {
-    "from_side": 24,
+    "from_side": 64,
     "from_top": 24,
-    "from_bottom": 48,
+    "from_bottom": 64,
     "size": 14,
     "interline": 6
   },
   "grid": {
     "black_background": 0,
     "fitting_block_ratio": 1.5,
-    "rows": 4,
-    "columns": 6,
+    "rows": 5,
+    "columns": 5,
     "horizontal_margin": 14,
     "vertical_margin": 14,
     "lateral_margin": 28,
@@ -69,32 +68,27 @@
     "author": {
       "show": 1,
       "size": 40,
-      "from_top": 320,
-      "_comment": "4/3: 320, A4: 240"
+      "from_top": 0.40
     },
     "website": {
       "show": 0,
       "size": 20,
-      "from_top": 380,
-      "_comment": "4/3: 380, A4: 280"
+      "from_top": 0.47
     },
     "email": {
       "show": 1,
       "size": 20,
-      "from_top": 380,
-      "_comment": "4/3: 380, A4: 280"
+      "from_top": 0.47
     },
     "phone": {
       "show": 1,
       "size": 20,
-      "from_top": 410,
-      "_comment": "4/3: 410, A4: 330"
+      "from_top": 0.55
     },
     "disclaimer": {
       "show": 1,
       "size": 20,
-      "from_top": 680,
-      "_comment": "4/3: 680, A4: 540"
+      "from_top": 0.91
     }
   }
 }

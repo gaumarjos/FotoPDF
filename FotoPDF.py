@@ -46,6 +46,7 @@ import locale
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
 # Constants
+VERSION = '2021-08-03'
 GUI = True
 # USE_FPDF = False
 # USE_RL = True
@@ -787,7 +788,7 @@ def MainGUI():
     win = QMainWindow()
     win.setGeometry(200, 200, 300, 600)
     win.setFixedSize(300, 600)
-    win.setWindowTitle("FotoPDF")
+    win.setWindowTitle("FotoPDF" + " " + VERSION)
     app.setWindowIcon(QIcon(resource_path('FotoPDF.png')))
 
     detail_widget = QTextEdit(win)
