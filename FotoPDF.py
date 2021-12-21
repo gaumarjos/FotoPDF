@@ -299,6 +299,8 @@ class FotoPDF:
                          height=scaled_image_h,
                          mask=None)
 
+        self.message_on_detail_widget("Image rescaled to: {} x {}".format(scaled_image_w, scaled_image_h))
+
         bottom_of_the_image = scaled_image_y + scaled_image_h
 
         return bottom_of_the_image, caption
