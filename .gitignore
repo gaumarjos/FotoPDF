@@ -2,7 +2,6 @@ build/
 dist/
 *.pkl
 .DS_Store
-.idea/
 __pycache__/
 FotoPDF.spec
 .eggs/
